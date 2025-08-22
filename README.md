@@ -145,23 +145,23 @@ end)
 # Send JSON data
 result = send_request(client, "/api/data", 
                      Dict("key" => "value"),
-                     body_format = BODY_JSON)
+                     body_format = REPE.JSON)
 
 # Send BEVE binary data (compact and efficient)
 result = send_request(client, "/api/data",
                      Dict("numbers" => [1, 2, 3], "flag" => true),
-                     body_format = BODY_BEVE)
+                     body_format = REPE.BEVE)
 
 # Send plain text
 result = send_request(client, "/api/text",
                      "Hello, World!",
-                     body_format = BODY_UTF8)
+                     body_format = REPE.UTF8)
 
 # Send raw binary
 data = UInt8[1, 2, 3, 4, 5]
 result = send_request(client, "/api/binary",
                      data,
-                     body_format = BODY_RAW_BINARY)
+                     body_format = REPE.RAW_BINARY)
 ```
 
 ### Timeout Control
@@ -212,14 +212,14 @@ connect(client)
 # Call C++ methods from Julia
 result = send_request(client, "/add",
                      Dict("a" => 10.0, "b" => 20.0),
-                     body_format = BODY_JSON)
+                     body_format = REPE.JSON)
 println(result["result"])  # 30.0
 
 # The C++ divide function properly throws exceptions for errors
 try
     send_request(client, "/divide",
                 Dict("numerator" => 1.0, "denominator" => 0.0),
-                body_format = BODY_JSON)
+                body_format = REPE.JSON)
 catch e
     println("Caught division by zero error")
 end
@@ -271,7 +271,7 @@ connect(client)
 
 result = send_request(client, "/sensors/upload",
                      sensor_data,
-                     body_format = BODY_BEVE)
+                     body_format = REPE.BEVE)
 
 disconnect(client)
 ```
@@ -284,8 +284,8 @@ You can test the efficiency of different formats:
 data = Dict("matrix" => [[1,2,3], [4,5,6]], "numbers" => collect(1:100))
 
 # Compare sizes
-beve_size = length(encode_body(data, BODY_BEVE))
-json_size = length(encode_body(data, BODY_JSON))
+beve_size = length(encode_body(data, REPE.BEVE))
+json_size = length(encode_body(data, REPE.JSON))
 
 println("BEVE: $beve_size bytes")
 println("JSON: $json_size bytes")

@@ -48,7 +48,7 @@ tasks = Task[]
 for i in 1:10
     # Each task would attempt to make a request (will fail due to no server)
     # but demonstrates the concurrent task creation
-    task = REPE.send_request_async(client, "/test", Dict("id" => i), body_format = REPE.BODY_JSON)
+    task = REPE.send_request_async(client, "/test", Dict("id" => i), body_format = REPE.JSON)
     push!(tasks, task)
 end
 
@@ -75,7 +75,7 @@ requests = Tuple{String, Any}[
 ]
 
 println("Preparing batch of $(length(requests)) requests...")
-batch_tasks = REPE.batch(client, requests, body_format = REPE.BODY_JSON)
+batch_tasks = REPE.batch(client, requests, body_format = REPE.JSON)
 println("  Created $(length(batch_tasks)) batch tasks")
 println("  Batch task types: $(typeof(batch_tasks))")
 
@@ -133,16 +133,16 @@ if Threads.nthreads() > 1
     Threads.@threads for i in 1:100
         # Alternate between different body formats to test all encoders
         body_format = if i % 3 == 0
-            REPE.BODY_BEVE
+            REPE.BEVE
         elseif i % 3 == 1  
-            REPE.BODY_JSON
+            REPE.JSON
         else
-            REPE.BODY_UTF8
+            REPE.UTF8
         end
         
-        body_data = if body_format == REPE.BODY_BEVE
+        body_data = if body_format == REPE.BEVE
             Dict("id" => i, "data" => "test_$i", "number" => i * 2)
-        elseif body_format == REPE.BODY_JSON
+        elseif body_format == REPE.JSON
             Dict("id" => i, "message" => "json_$i")
         else
             "utf8_data_$i"

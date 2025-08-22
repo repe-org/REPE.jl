@@ -10,17 +10,17 @@ function connect_to_glaze_server(host::String = "localhost", port::Int = 8081)
     try
         result = send_request(client, "/test/echo", 
                             Dict("message" => "Hello from Julia!"),
-                            body_format = BODY_JSON)
+                            body_format = REPE.JSON)
         println("Echo response: ", result)
         
         result = send_request(client, "/math/add",
                             Dict("a" => 42, "b" => 58),
-                            body_format = BODY_JSON)
+                            body_format = REPE.JSON)
         println("Math result: ", result)
         
         data = send_request(client, "/status", nothing,
                           query_format = QUERY_JSON_POINTER,
-                          body_format = BODY_JSON)
+                          body_format = REPE.JSON)
         println("Server status: ", data)
         
     catch e
@@ -53,7 +53,7 @@ function create_compatible_server(port::Int = 8082)
     end)
     
     println("Starting Julia REPE server on port $port (Glaze-compatible)...")
-    start_server(server)
+    listen(server)
 end
 
 if length(ARGS) > 0

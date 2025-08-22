@@ -26,7 +26,7 @@ beve_msg = REPE.Message(
     id = 1,
     query = "/user/profile",
     body = basic_data,
-    body_format = UInt16(REPE.BODY_BEVE)
+    body_format = REPE.BEVE
 )
 
 println("Created BEVE message:")
@@ -61,7 +61,7 @@ catch e
     
     # Create a simpler example that should work
     simple_data = Dict("id" => 123, "name" => "test")
-    simple_msg = REPE.Message(id=2, query="/simple", body=simple_data, body_format=UInt16(REPE.BODY_BEVE))
+    simple_msg = REPE.Message(id=2, query="/simple", body=simple_data, body_format=REPE.BEVE)
     simple_serialized = serialize_message(simple_msg)
     simple_deserialized = deserialize_message(simple_serialized)
     simple_parsed = parse_body(simple_deserialized)
@@ -94,8 +94,8 @@ test_datasets = [
 
 for (name, data) in test_datasets
     # Encode with both formats
-    beve_encoded = encode_body(data, REPE.BODY_BEVE)
-    json_encoded = encode_body(data, REPE.BODY_JSON)
+    beve_encoded = encode_body(data, REPE.BEVE)
+    json_encoded = encode_body(data, REPE.JSON)
     
     # Calculate compression ratio
     ratio = length(beve_encoded) / length(json_encoded)
@@ -136,7 +136,7 @@ complex_msg = REPE.Message(
     id = 2,
     query = "/sensors/data",
     body = complex_data,
-    body_format = UInt16(REPE.BODY_BEVE)
+    body_format = REPE.BEVE
 )
 
 # Serialize and deserialize
@@ -160,7 +160,7 @@ try
     invalid_msg = REPE.Message(
         query = "/test",
         body = UInt8[0xFF, 0xFE, 0xFD],  # Invalid BEVE data
-        body_format = UInt16(REPE.BODY_BEVE)
+        body_format = REPE.BEVE
     )
     
     parsed_invalid = parse_body(invalid_msg)
@@ -190,4 +190,4 @@ println()
 
 println("✅ BEVE Demo Complete!")
 println("REPE now supports efficient binary encoding with BEVE format.")
-println("Use body_format = REPE.BODY_BEVE in your RPC calls for compact data transfer.")
+println("Use body_format = REPE.BEVE in your RPC calls for compact data transfer.")

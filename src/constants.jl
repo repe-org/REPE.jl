@@ -38,3 +38,9 @@ const ERROR_MESSAGES = Dict{ErrorCode, String}(
     EC_METHOD_NOT_FOUND => "Method not found",
     EC_TIMEOUT => "Timeout"
 )
+
+# Convenience aliases for body formats
+const JSON = BODY_JSON
+const BEVE = BODY_BEVE
+const UTF8 = BODY_UTF8
+const RAW_BINARY = BODY_RAW_BINARY

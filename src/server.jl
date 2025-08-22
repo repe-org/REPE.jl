@@ -160,3 +160,11 @@ function listen(server::Server; async::Bool = false)
     end
 end
 
+# Pretty printing for REPL
+function Base.show(io::IO, server::Server)
+    status = server.running ? "running" : "stopped"
+    n_handlers = length(server.handlers)
+    handler_text = n_handlers == 1 ? "1 handler" : "$n_handlers handlers"
+    print(io, "Server(\"$(server.host):$(server.port)\", $status, $handler_text)")
+end
+

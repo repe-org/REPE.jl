@@ -287,3 +287,14 @@ function await_batch(tasks::Vector{Task})
     return [fetch(task) for task in tasks]
 end
 
+# Utility function to check connection status
+function isconnected(client::Client)
+    return client.connected
+end
+
+# Pretty printing for REPL
+function Base.show(io::IO, client::Client)
+    status = client.connected ? "connected" : "disconnected"
+    print(io, "Client(\"$(client.host):$(client.port)\", $status)")
+end
+
