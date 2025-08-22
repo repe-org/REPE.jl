@@ -33,7 +33,7 @@ function connect(client::Client)
             client.connected = true
             
             # Start the response handler
-            @async handle_responses(client)
+            @async _handle_responses(client)
             
             return client
         catch e
@@ -65,13 +65,13 @@ function disconnect(client::Client)
     end
 end
 
-function get_next_id(client::Client)::UInt64
+function _get_next_id(client::Client)::UInt64
     # atomic_add! returns the old value and adds, so we get unique sequential IDs
     old_val = Threads.atomic_add!(client.next_id, UInt64(1))
     return old_val
 end
 
-function send_message(client::Client, msg::Message)
+function _send_message(client::Client, msg::Message)
     # Check connection without lock for fast path
     if !client.connected
         throw(ErrorException("Client not connected"))
@@ -101,7 +101,7 @@ function send_notify(client::Client, method::String, params = nothing;
         notify = true
     )
     
-    send_message(client, msg)
+    _send_message(client, msg)
 end
 
 # Async version that returns a Task
@@ -111,7 +111,7 @@ function send_request_async(client::Client, method::String, params = nothing;
                            timeout::Union{Float64, Nothing} = nothing)
     
     return @async begin
-        send_request_sync(client, method, params; 
+        _send_request_sync(client, method, params; 
                          query_format=query_format, 
                          body_format=body_format, 
                          timeout=timeout)
@@ -119,7 +119,7 @@ function send_request_async(client::Client, method::String, params = nothing;
 end
 
 # Internal synchronous implementation
-function send_request_sync(client::Client, method::String, params = nothing; 
+function _send_request_sync(client::Client, method::String, params = nothing; 
                           query_format::QueryFormat = QUERY_JSON_POINTER,
                           body_format::BodyFormat = BODY_JSON,
                           timeout::Union{Float64, Nothing} = nothing)
@@ -128,7 +128,7 @@ function send_request_sync(client::Client, method::String, params = nothing;
         connect(client)
     end
     
-    request_id = get_next_id(client)
+    request_id = _get_next_id(client)
     response_channel = Channel(1)
     
     # Register the pending request
@@ -148,7 +148,7 @@ function send_request_sync(client::Client, method::String, params = nothing;
     )
     
     try
-        send_message(client, msg)
+        _send_message(client, msg)
         
         timeout_val = something(timeout, client.timeout)
         
@@ -195,13 +195,13 @@ function send_request(client::Client, method::String, params = nothing;
                      body_format::BodyFormat = BODY_JSON,
                      timeout::Union{Float64, Nothing} = nothing)
     
-    return send_request_sync(client, method, params; 
+    return _send_request_sync(client, method, params; 
                             query_format=query_format, 
                             body_format=body_format, 
                             timeout=timeout)
 end
 
-function handle_responses(client::Client)
+function _handle_responses(client::Client)
     buffer = UInt8[]
     
     while true
@@ -287,13 +287,3 @@ function await_batch(tasks::Vector{Task})
     return [fetch(task) for task in tasks]
 end
 
-function call_method(client::Client, method::String, args...; kwargs...)
-    params = isempty(args) ? nothing : length(args) == 1 ? args[1] : args
-    return send_request(client, method, params; kwargs...)
-end
-
-macro rpc(client, method, args...)
-    esc(quote
-        call_method($client, $(string(method)), $(args...))
-    end)
-end

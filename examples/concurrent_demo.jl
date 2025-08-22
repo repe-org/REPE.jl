@@ -22,7 +22,7 @@ if Threads.nthreads() > 1
     ids = Vector{UInt64}(undef, 100)
     
     Threads.@threads for i in 1:100
-        ids[i] = REPE.get_next_id(client)
+        ids[i] = REPE._get_next_id(client)
     end
     
     unique_ids = unique(ids)
@@ -154,7 +154,7 @@ if Threads.nthreads() > 1
             body = body_data,
             body_format = UInt16(body_format)
         )
-        messages[i] = REPE.serialize_message(msg)
+        messages[i] = serialize_message(msg)
     end
     
     println("  Serialized 100 messages across threads (mixed formats)")

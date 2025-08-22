@@ -12,7 +12,7 @@ using REPE
     end)
     
     # Start server with proper async handling
-    server_task = @async REPE.start_server(server)
+    server_task = @async REPE._start_server(server)
     
     # Wait a bit longer and check if server is running
     for i in 1:10
@@ -57,6 +57,6 @@ using REPE
         
     finally
         REPE.disconnect(client)
-        REPE.stop_server(server)
+        REPE._stop_server(server)
     end
 end

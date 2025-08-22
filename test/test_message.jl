@@ -21,10 +21,10 @@
             body_format = UInt16(REPE.BODY_JSON)
         )
         
-        bytes = REPE.serialize_message(msg)
+        bytes = serialize_message(msg)
         @test length(bytes) == msg.header.length
         
-        msg2 = REPE.deserialize_message(bytes)
+        msg2 = deserialize_message(bytes)
         @test msg2.header.id == msg.header.id
         @test String(msg2.query) == String(msg.query)
         @test msg2.header.body_format == UInt16(REPE.BODY_JSON)
@@ -50,7 +50,7 @@
             body = Dict("result" => 42),
             body_format = UInt16(REPE.BODY_JSON)
         )
-        parsed = REPE.parse_body(json_msg)
+        parsed = parse_body(json_msg)
         @test parsed["result"] == 42
         
         text_msg = REPE.Message(
@@ -58,7 +58,7 @@
             body = "plain text",
             body_format = UInt16(REPE.BODY_UTF8)
         )
-        parsed = REPE.parse_body(text_msg)
+        parsed = parse_body(text_msg)
         @test parsed == "plain text"
     end
     

@@ -8,8 +8,8 @@
             body_format = UInt16(REPE.BODY_JSON)
         )
         
-        bytes = REPE.serialize_message(request)
-        response = REPE.deserialize_message(bytes)
+        bytes = serialize_message(request)
+        response = deserialize_message(bytes)
         
         @test response.header.id == request.header.id
         @test String(response.query) == String(request.query)
@@ -35,7 +35,7 @@
             body_format = UInt16(REPE.BODY_JSON)
         )
         
-        response = REPE.process_request(server, request)
+        response = REPE._process_request(server, request)
         @test handler_called[] == true
         @test response.header.id == 456
         @test response.header.ec == UInt32(REPE.EC_OK)
@@ -52,7 +52,7 @@
             body_format = UInt16(REPE.BODY_UTF8)
         )
         
-        response = REPE.process_request(server, request)
+        response = REPE._process_request(server, request)
         @test response.header.id == 789
         @test response.header.ec == UInt32(REPE.EC_METHOD_NOT_FOUND)
         @test occursin("not found", String(response.body))
@@ -78,7 +78,7 @@
             body_format = UInt16(REPE.BODY_UTF8)
         )
         
-        response = REPE.process_request(server, request)
+        response = REPE._process_request(server, request)
         @test middleware_called[] == true
         @test response.header.ec == UInt32(REPE.EC_OK)
     end

@@ -6,7 +6,7 @@
         # Generate IDs from multiple threads
         ids = Vector{UInt64}(undef, 1000)
         Threads.@threads for i in 1:1000
-            ids[i] = REPE.get_next_id(client)
+            ids[i] = REPE._get_next_id(client)
         end
         
         # All IDs should be unique
@@ -41,7 +41,7 @@
         
         Threads.@threads for t in 1:n_threads
             for i in 1:n_ops
-                id = REPE.get_next_id(client)
+                id = REPE._get_next_id(client)
                 ch = Channel(1)
                 
                 # Add to pending requests
@@ -109,7 +109,7 @@
                 body = "data-$i",
                 body_format = UInt16(REPE.BODY_UTF8)
             )
-            messages[i] = REPE.serialize_message(msg)
+            messages[i] = serialize_message(msg)
         end
         
         # All messages should be properly serialized
@@ -128,7 +128,7 @@
         
         n_increments = 1000
         Threads.@threads for i in 1:n_increments
-            REPE.get_next_id(client)
+            REPE._get_next_id(client)
         end
         
         # Should have incremented exactly n_increments times

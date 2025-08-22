@@ -42,12 +42,12 @@ println("------------------------------------------")
 
 # Serialize the message
 try
-    serialized = REPE.serialize_message(beve_msg)
+    serialized = serialize_message(beve_msg)
     println("Serialized message size: $(length(serialized)) bytes")
 
     # Deserialize it back
-    deserialized = REPE.deserialize_message(serialized)
-    parsed_data = REPE.parse_body(deserialized)
+    deserialized = deserialize_message(serialized)
+    parsed_data = parse_body(deserialized)
 
     println("✓ Round-trip successful!")
     println("Deserialized data:")
@@ -62,9 +62,9 @@ catch e
     # Create a simpler example that should work
     simple_data = Dict("id" => 123, "name" => "test")
     simple_msg = REPE.Message(id=2, query="/simple", body=simple_data, body_format=UInt16(REPE.BODY_BEVE))
-    simple_serialized = REPE.serialize_message(simple_msg)
-    simple_deserialized = REPE.deserialize_message(simple_serialized)
-    simple_parsed = REPE.parse_body(simple_deserialized)
+    simple_serialized = serialize_message(simple_msg)
+    simple_deserialized = deserialize_message(simple_serialized)
+    simple_parsed = parse_body(simple_deserialized)
     
     println("✓ Simple round-trip successful!")
     println("Simple data: $simple_parsed")
@@ -94,8 +94,8 @@ test_datasets = [
 
 for (name, data) in test_datasets
     # Encode with both formats
-    beve_encoded = REPE.encode_body(data, REPE.BODY_BEVE)
-    json_encoded = REPE.encode_body(data, REPE.BODY_JSON)
+    beve_encoded = encode_body(data, REPE.BODY_BEVE)
+    json_encoded = encode_body(data, REPE.BODY_JSON)
     
     # Calculate compression ratio
     ratio = length(beve_encoded) / length(json_encoded)
@@ -140,9 +140,9 @@ complex_msg = REPE.Message(
 )
 
 # Serialize and deserialize
-serialized_complex = REPE.serialize_message(complex_msg)
-deserialized_complex = REPE.deserialize_message(serialized_complex)
-parsed_complex = REPE.parse_body(deserialized_complex)
+serialized_complex = serialize_message(complex_msg)
+deserialized_complex = deserialize_message(serialized_complex)
+parsed_complex = parse_body(deserialized_complex)
 
 println("Complex data processed successfully:")
 println("  Sensors: $(length(parsed_complex["sensor_readings"]))")
@@ -163,7 +163,7 @@ try
         body_format = UInt16(REPE.BODY_BEVE)
     )
     
-    parsed_invalid = REPE.parse_body(invalid_msg)
+    parsed_invalid = parse_body(invalid_msg)
     println("Unexpectedly succeeded parsing invalid data: $parsed_invalid")
 catch e
     println("✓ Correctly caught error for invalid BEVE data: $(typeof(e))")

@@ -28,7 +28,7 @@ client = REPE.Client("localhost", 9999)
 # Test ID generation
 ids = []
 for i in 1:10
-    push!(ids, REPE.get_next_id(client))
+    push!(ids, REPE._get_next_id(client))
 end
 println("Generated IDs: ", ids)
 println("All unique: ", length(unique(ids)) == 10)

@@ -13,7 +13,7 @@
         end)
         
         # Start server in background and wait for it to be ready
-        @async REPE.start_server(server)
+        @async REPE._start_server(server)
         
         # Wait for server to actually start listening
         for i in 1:50
@@ -41,7 +41,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE.stop_server(server)
+            REPE._stop_server(server)
         end
     end
     
@@ -57,7 +57,7 @@
         end)
         
         # Start server in background and wait for it to be ready
-        @async REPE.start_server(server)
+        @async REPE._start_server(server)
         
         # Wait for server to actually start listening
         for i in 1:50
@@ -84,7 +84,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE.stop_server(server)
+            REPE._stop_server(server)
         end
     end
     
@@ -99,7 +99,7 @@
         end)
         
         # Start server in background and wait for it to be ready
-        @async REPE.start_server(server)
+        @async REPE._start_server(server)
         
         # Wait for server to actually start listening
         for i in 1:50
@@ -125,7 +125,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE.stop_server(server)
+            REPE._stop_server(server)
         end
     end
     
@@ -144,7 +144,7 @@
         end)
         
         # Start server in background and wait for it to be ready
-        @async REPE.start_server(server)
+        @async REPE._start_server(server)
         
         # Wait for server to actually start listening
         for i in 1:50
@@ -176,7 +176,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE.stop_server(server)
+            REPE._stop_server(server)
         end
     end
 end

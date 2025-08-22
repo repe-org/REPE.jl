@@ -16,7 +16,7 @@ REPE.register(server, "/echo", function(params, request)
 end)
 
 # Start server
-@async REPE.start_server(server)
+@async REPE._start_server(server)
 sleep(2)  # Give server more time to start
 
 # Create client
@@ -51,5 +51,5 @@ try
     
 finally
     REPE.disconnect(client)
-    REPE.stop_server(server)
+    REPE._stop_server(server)
 end

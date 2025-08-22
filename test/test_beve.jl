@@ -38,7 +38,7 @@
             body_format = UInt16(REPE.BODY_BEVE)
         )
         
-        decoded = REPE.parse_body(msg)
+        decoded = parse_body(msg)
         @test decoded isa Dict
         @test decoded["int"] == 42
         @test decoded["float"] ≈ 3.14
@@ -70,11 +70,11 @@
         )
         
         # Serialize and deserialize
-        serialized = REPE.serialize_message(request)
-        deserialized = REPE.deserialize_message(serialized)
+        serialized = serialize_message(request)
+        deserialized = deserialize_message(serialized)
         
         # Parse the body
-        parsed_data = REPE.parse_body(deserialized)
+        parsed_data = parse_body(deserialized)
         
         # Verify everything matches
         @test deserialized.header.id == request.header.id
@@ -119,8 +119,8 @@
         beve_msg = REPE.Message(query="/test", body=beve_encoded, body_format=UInt16(REPE.BODY_BEVE))
         json_msg = REPE.Message(query="/test", body=json_encoded, body_format=UInt16(REPE.BODY_JSON))
         
-        beve_decoded = REPE.parse_body(beve_msg)
-        json_decoded = REPE.parse_body(json_msg)
+        beve_decoded = parse_body(beve_msg)
+        json_decoded = parse_body(json_msg)
         
         @test beve_decoded["numbers"] == json_decoded["numbers"]
         @test beve_decoded["repeated"] == json_decoded["repeated"]
@@ -137,7 +137,7 @@
             body_format = UInt16(REPE.BODY_BEVE)
         )
         
-        @test_throws Exception REPE.parse_body(msg)
+        @test_throws Exception parse_body(msg)
     end
     
     @testset "BEVE Complex Data Types" begin
@@ -157,7 +157,7 @@
             # Test round-trip
             encoded = REPE.encode_body(test_data, REPE.BODY_BEVE)
             msg = REPE.Message(query="/test$i", body=encoded, body_format=UInt16(REPE.BODY_BEVE))
-            decoded = REPE.parse_body(msg)
+            decoded = parse_body(msg)
             
             # Basic structure should match
             @test length(keys(decoded)) == length(keys(test_data))

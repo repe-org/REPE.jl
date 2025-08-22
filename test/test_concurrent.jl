@@ -6,7 +6,7 @@
         # Generate IDs from multiple threads
         ids = Vector{UInt64}(undef, 1000)
         Threads.@threads for i in 1:1000
-            ids[i] = REPE.get_next_id(client)
+            ids[i] = REPE._get_next_id(client)
         end
         
         # All IDs should be unique
@@ -27,7 +27,7 @@
         end)
         
         # Start server in background
-        @async REPE.start_server(server)
+        @async REPE._start_server(server)
         sleep(1.0)  # Wait for server to start
         
         client = REPE.Client("localhost", 9877)
@@ -55,7 +55,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE.stop_server(server)
+            REPE._stop_server(server)
         end
     end
     
@@ -70,7 +70,7 @@
             return Dict("result" => params["x"] * params["y"])
         end)
         
-        @async REPE.start_server(server)
+        @async REPE._start_server(server)
         sleep(1.0)
         
         client = REPE.Client("localhost", 9878)
@@ -98,7 +98,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE.stop_server(server)
+            REPE._stop_server(server)
         end
     end
     
@@ -111,7 +111,7 @@
             return Dict("count" => counter[])
         end)
         
-        @async REPE.start_server(server)
+        @async REPE._start_server(server)
         sleep(1.0)
         
         client = REPE.Client("localhost", 9879)
@@ -153,7 +153,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE.stop_server(server)
+            REPE._stop_server(server)
         end
     end
     
@@ -164,7 +164,7 @@
             return params
         end)
         
-        @async REPE.start_server(server)
+        @async REPE._start_server(server)
         sleep(1.0)
         
         client = REPE.Client("localhost", 9880)
@@ -209,7 +209,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE.stop_server(server)
+            REPE._stop_server(server)
         end
     end
     
@@ -224,7 +224,7 @@
             return Dict("result" => value * 2)
         end)
         
-        @async REPE.start_server(server)
+        @async REPE._start_server(server)
         sleep(1.0)
         
         client = REPE.Client("localhost", 9881)
@@ -260,7 +260,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE.stop_server(server)
+            REPE._stop_server(server)
         end
     end
 end
