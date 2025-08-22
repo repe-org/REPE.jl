@@ -6,12 +6,12 @@ Julia implementation of the [REPE (Remote Efficient Protocol Extension)](https:/
 
 - Full implementation of the official [REPE v1 specification](https://github.com/repe-org/REPE)
 - Binary protocol with little-endian encoding
-- Support for multiple data formats (JSON, UTF-8, raw binary)
+- Support for multiple data formats (JSON, BEVE, UTF-8, raw binary)
 - Asynchronous client/server architecture
 - Error handling with standardized error codes
 - Notification support (fire-and-forget messages)
 - Compatible with C++ Glaze implementation
-- Comprehensive test suite with 51+ unit tests
+- Comprehensive test suite with 107+ unit tests
 - Integration tested with Glaze C++ servers
 
 ## Requirements
@@ -44,8 +44,14 @@ REPE.register(server, "/api/add", function(params, request)
     return Dict("result" => params["a"] + params["b"])
 end)
 
-# Start server
+# Start server (blocking)
 listen(server)
+
+# Or start server asynchronously
+listen(server; async=true)
+
+# Stop the server when done
+stop(server)
 ```
 
 ### Client Example
@@ -132,8 +138,9 @@ end)
 
 # Add authentication middleware
 REPE.use(server, function(request)
-    if !check_auth(request)
-        return EC_UNAUTHORIZED  # Stop processing, return error
+    if !check_auth(request)  # check_auth is your custom function
+        # Return custom application error (codes >= 4096)
+        return ErrorCode(4096)  # Custom EC_UNAUTHORIZED
     end
     return nothing
 end)
@@ -168,10 +175,33 @@ result = send_request(client, "/api/binary",
 
 ```julia
 # Set default timeout for client
-client = Client("localhost", 8080, timeout=10.0)
+client = Client("localhost", 8080; timeout=10.0)
 
 # Override timeout for specific request
 result = send_request(client, "/api/slow", params, timeout=60.0)
+```
+
+### Async and Batch Operations
+
+```julia
+# Async request - returns a Task
+task = send_request_async(client, "/api/data", params,
+                         body_format = REPE.JSON)
+result = fetch(task)
+
+# Batch multiple requests
+requests = [
+    ("/api/method1", Dict("param" => 1)),
+    ("/api/method2", Dict("param" => 2)),
+    ("/api/method3", Dict("param" => 3))
+]
+tasks = batch(client, requests; body_format = REPE.JSON)
+results = await_batch(tasks)
+
+# Check connection status
+if isconnected(client)
+    println("Client is connected")
+end
 ```
 
 ## Glaze C++ Interoperability

@@ -44,7 +44,7 @@ function _start_server(server::Server)
     end
 end
 
-function _stop_server(server::Server)
+function stop(server::Server)
     if !server.running
         return
     end
