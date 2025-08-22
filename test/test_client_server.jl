@@ -3,12 +3,12 @@
         port = 9001
         server = REPE.REPEServer("localhost", port)
         
-        REPE.register_handler(server, "/add", function(params, request)
+        REPE.register(server, "/add", function(params, request)
             result = params["a"] + params["b"]
             return Dict("result" => result)
         end)
         
-        REPE.register_handler(server, "/echo", function(params, request)
+        REPE.register(server, "/echo", function(params, request)
             return params
         end)
         
@@ -49,7 +49,7 @@
         port = 9002
         server = REPE.REPEServer("localhost", port)
         
-        REPE.register_handler(server, "/divide", function(params, request)
+        REPE.register(server, "/divide", function(params, request)
             if params["b"] == 0
                 throw(ErrorException("Division by zero"))
             end
@@ -93,7 +93,7 @@
         server = REPE.REPEServer("localhost", port)
         
         received = Ref(false)
-        REPE.register_handler(server, "/notify", function(params, request)
+        REPE.register(server, "/notify", function(params, request)
             received[] = true
             return Dict("status" => "received")
         end)
@@ -133,7 +133,7 @@
         port = 9004
         server = REPE.REPEServer("localhost", port)
         
-        REPE.register_handler(server, "/process", function(params, request)
+        REPE.register(server, "/process", function(params, request)
             if request.header.body_format == UInt16(REPE.BODY_JSON)
                 return Dict("format" => "json", "data" => params)
             elseif request.header.body_format == UInt16(REPE.BODY_UTF8)

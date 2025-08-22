@@ -10,7 +10,7 @@ println("Threads available: ", Threads.nthreads())
 server = REPE.REPEServer("localhost", 9999)
 
 # Register a simple handler
-REPE.register_handler(server, "/echo", function(params, request)
+REPE.register(server, "/echo", function(params, request)
     println("Server received: ", params)
     return params
 end)

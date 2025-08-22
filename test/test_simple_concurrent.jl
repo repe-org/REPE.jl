@@ -7,7 +7,7 @@ using REPE
     server = REPE.REPEServer("localhost", 9999)
     
     # Register handler
-    REPE.register_handler(server, "/echo", function(params, request)
+    REPE.register(server, "/echo", function(params, request)
         return params
     end)
     

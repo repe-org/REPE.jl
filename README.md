@@ -40,7 +40,7 @@ using REPE
 server = REPEServer("localhost", 8080)
 
 # Register handlers
-register_handler(server, "/api/add", function(params, request)
+REPE.register(server, "/api/add", function(params, request)
     return Dict("result" => params["a"] + params["b"])
 end)
 
@@ -125,13 +125,13 @@ Application-specific error codes start at 4096.
 server = REPEServer("localhost", 8080)
 
 # Add logging middleware
-add_middleware(server, function(request)
+REPE.add_middleware(server, function(request)
     println("Request: ", parse_query(request))
     return nothing  # Continue processing
 end)
 
 # Add authentication middleware
-add_middleware(server, function(request)
+REPE.add_middleware(server, function(request)
     if !check_auth(request)
         return EC_UNAUTHORIZED  # Stop processing, return error
     end

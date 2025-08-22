@@ -20,7 +20,7 @@
         server = REPE.REPEServer("localhost", 9999)
         
         handler_called = Ref(false)
-        REPE.register_handler(server, "/test", function(params, request)
+        REPE.register(server, "/test", function(params, request)
             handler_called[] = true
             return Dict("result" => "ok")
         end)
@@ -67,7 +67,7 @@
             return nothing  # Continue processing
         end)
         
-        REPE.register_handler(server, "/test", function(params, request)
+        REPE.register(server, "/test", function(params, request)
             return Dict("result" => "ok")
         end)
         

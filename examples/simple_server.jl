@@ -2,19 +2,19 @@ using REPE
 
 server = REPEServer("localhost", 8080)
 
-register_handler(server, "/api/add", function(params, request)
+REPE.register(server, "/api/add", function(params, request)
     a = get(params, "a", 0)
     b = get(params, "b", 0)
     return Dict("result" => a + b)
 end)
 
-register_handler(server, "/api/multiply", function(params, request)
+REPE.register(server, "/api/multiply", function(params, request)
     x = get(params, "x", 0)
     y = get(params, "y", 0)
     return Dict("result" => x * y)
 end)
 
-register_handler(server, "/api/get_data", function(params, request)
+REPE.register(server, "/api/get_data", function(params, request)
     return Dict(
         "timestamp" => time(),
         "version" => "1.0.0",
@@ -22,7 +22,7 @@ register_handler(server, "/api/get_data", function(params, request)
     )
 end)
 
-register_handler(server, "/api/log", function(params, request)
+REPE.register(server, "/api/log", function(params, request)
     println("Log: ", params)
     return Dict("status" => "logged")
 end)

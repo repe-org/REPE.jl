@@ -19,7 +19,7 @@
         server = REPE.REPEServer("localhost", 9877)
         
         # Register a handler that simulates work
-        REPE.register_handler(server, "/compute", function(params, request)
+        REPE.register(server, "/compute", function(params, request)
             # Simulate some computation time
             sleep(0.01)
             value = get(params, "value", 0)
@@ -62,11 +62,11 @@
     @testset "Batch async requests" begin
         server = REPE.REPEServer("localhost", 9878)
         
-        REPE.register_handler(server, "/add", function(params, request)
+        REPE.register(server, "/add", function(params, request)
             return Dict("result" => params["a"] + params["b"])
         end)
         
-        REPE.register_handler(server, "/multiply", function(params, request)
+        REPE.register(server, "/multiply", function(params, request)
             return Dict("result" => params["x"] * params["y"])
         end)
         
@@ -106,7 +106,7 @@
         server = REPE.REPEServer("localhost", 9879)
         
         counter = Threads.Atomic{Int}(0)
-        REPE.register_handler(server, "/increment", function(params, request)
+        REPE.register(server, "/increment", function(params, request)
             Threads.atomic_add!(counter, 1)
             return Dict("count" => counter[])
         end)
@@ -160,7 +160,7 @@
     @testset "Concurrent mixed operations" begin
         server = REPE.REPEServer("localhost", 9880)
         
-        REPE.register_handler(server, "/echo", function(params, request)
+        REPE.register(server, "/echo", function(params, request)
             return params
         end)
         
@@ -216,7 +216,7 @@
     @testset "Error handling in concurrent requests" begin
         server = REPE.REPEServer("localhost", 9881)
         
-        REPE.register_handler(server, "/maybe_fail", function(params, request)
+        REPE.register(server, "/maybe_fail", function(params, request)
             value = get(params, "value", 0)
             if value % 3 == 0
                 throw(ErrorException("Simulated error for value $value"))

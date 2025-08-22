@@ -11,7 +11,7 @@ mutable struct REPEServer
     end
 end
 
-function register_handler(server::REPEServer, method::String, handler::Function)
+function register(server::REPEServer, method::String, handler::Function)
     server.handlers[method] = handler
 end
 
@@ -163,7 +163,7 @@ end
 macro rpc_handler(server, method, body)
     method_str = string(method)
     esc(quote
-        register_handler($server, $method_str, function(params, request)
+        register($server, $method_str, function(params, request)
             $body
         end)
     end)

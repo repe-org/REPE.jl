@@ -33,17 +33,17 @@ end
 function create_compatible_server(port::Int = 8082)
     server = REPEServer("0.0.0.0", port)
     
-    register_handler(server, "/test/echo", function(params, request)
+    REPE.register(server, "/test/echo", function(params, request)
         return params
     end)
     
-    register_handler(server, "/math/add", function(params, request)
+    REPE.register(server, "/math/add", function(params, request)
         a = get(params, "a", 0)
         b = get(params, "b", 0)
         return Dict("result" => a + b)
     end)
     
-    register_handler(server, "/status", function(params, request)
+    REPE.register(server, "/status", function(params, request)
         return Dict(
             "status" => "online",
             "version" => "REPE.jl v0.1.0",

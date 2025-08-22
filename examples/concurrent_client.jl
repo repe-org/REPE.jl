@@ -17,18 +17,18 @@ println("Starting local test server...")
 server = REPE.REPEServer("localhost", 8080)
 
 # Register some handlers that simulate different processing times
-REPE.register_handler(server, "/fast", function(params, request)
+REPE.register(server, "/fast", function(params, request)
     # Fast operation
     return Dict("result" => "fast response", "input" => params)
 end)
 
-REPE.register_handler(server, "/slow", function(params, request)
+REPE.register(server, "/slow", function(params, request)
     # Simulate slower operation
     sleep(0.5)
     return Dict("result" => "slow response", "input" => params)
 end)
 
-REPE.register_handler(server, "/compute", function(params, request)
+REPE.register(server, "/compute", function(params, request)
     # Simulate computation
     value = get(params, "value", 0)
     sleep(0.1)  # Simulate work
