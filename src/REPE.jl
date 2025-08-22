@@ -5,9 +5,10 @@ using JSON3
 using StructTypes
 using BEVE
 
-export REPEHeader, REPEMessage, REPEClient, REPEServer
+export Header, Message, Client, Server
 export ErrorCode, QueryFormat, BodyFormat
-export send_request, send_request_async, send_notify, parse_message, build_message
+export send_request, send_request_async, send_notify
+export REPEError
 export batch, await_batch
 export connect, disconnect, listen
 

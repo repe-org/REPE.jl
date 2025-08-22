@@ -1,7 +1,7 @@
 @testset "Concurrent Client Tests" begin
     
     @testset "Thread-safe ID generation" begin
-        client = REPE.REPEClient("localhost", 9876)
+        client = REPE.Client("localhost", 9876)
         
         # Generate IDs from multiple threads
         ids = Vector{UInt64}(undef, 1000)
@@ -16,7 +16,7 @@
     end
     
     @testset "Concurrent requests simulation" begin
-        server = REPE.REPEServer("localhost", 9877)
+        server = REPE.Server("localhost", 9877)
         
         # Register a handler that simulates work
         REPE.register(server, "/compute", function(params, request)
@@ -30,7 +30,7 @@
         @async REPE.start_server(server)
         sleep(1.0)  # Wait for server to start
         
-        client = REPE.REPEClient("localhost", 9877)
+        client = REPE.Client("localhost", 9877)
         REPE.connect(client)
         
         try
@@ -60,7 +60,7 @@
     end
     
     @testset "Batch async requests" begin
-        server = REPE.REPEServer("localhost", 9878)
+        server = REPE.Server("localhost", 9878)
         
         REPE.register(server, "/add", function(params, request)
             return Dict("result" => params["a"] + params["b"])
@@ -73,7 +73,7 @@
         @async REPE.start_server(server)
         sleep(1.0)
         
-        client = REPE.REPEClient("localhost", 9878)
+        client = REPE.Client("localhost", 9878)
         REPE.connect(client)
         
         try
@@ -103,7 +103,7 @@
     end
     
     @testset "Thread safety under load" begin
-        server = REPE.REPEServer("localhost", 9879)
+        server = REPE.Server("localhost", 9879)
         
         counter = Threads.Atomic{Int}(0)
         REPE.register(server, "/increment", function(params, request)
@@ -114,7 +114,7 @@
         @async REPE.start_server(server)
         sleep(1.0)
         
-        client = REPE.REPEClient("localhost", 9879)
+        client = REPE.Client("localhost", 9879)
         REPE.connect(client)
         
         try
@@ -158,7 +158,7 @@
     end
     
     @testset "Concurrent mixed operations" begin
-        server = REPE.REPEServer("localhost", 9880)
+        server = REPE.Server("localhost", 9880)
         
         REPE.register(server, "/echo", function(params, request)
             return params
@@ -167,7 +167,7 @@
         @async REPE.start_server(server)
         sleep(1.0)
         
-        client = REPE.REPEClient("localhost", 9880)
+        client = REPE.Client("localhost", 9880)
         REPE.connect(client)
         
         try
@@ -214,7 +214,7 @@
     end
     
     @testset "Error handling in concurrent requests" begin
-        server = REPE.REPEServer("localhost", 9881)
+        server = REPE.Server("localhost", 9881)
         
         REPE.register(server, "/maybe_fail", function(params, request)
             value = get(params, "value", 0)
@@ -227,7 +227,7 @@
         @async REPE.start_server(server)
         sleep(1.0)
         
-        client = REPE.REPEClient("localhost", 9881)
+        client = REPE.Client("localhost", 9881)
         REPE.connect(client)
         
         try

@@ -19,7 +19,7 @@ SERVER_HOST = "localhost"
 SERVER_PORT = 8080
 
 # Create client
-client = REPE.REPEClient(SERVER_HOST, SERVER_PORT)
+client = REPE.Client(SERVER_HOST, SERVER_PORT)
 
 # Helper function to test if server is available
 function server_available(host, port)

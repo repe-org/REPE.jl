@@ -1,4 +1,4 @@
-mutable struct REPEClient
+mutable struct Client
     socket::TCPSocket
     host::String
     port::Int
@@ -12,7 +12,7 @@ mutable struct REPEClient
     requests_lock::ReentrantLock     # Protects pending_requests
     write_lock::ReentrantLock        # Protects socket writes
     
-    function REPEClient(host::String = "localhost", port::Int = 8080; timeout::Float64 = 30.0)
+    function Client(host::String = "localhost", port::Int = 8080; timeout::Float64 = 30.0)
         new(TCPSocket(), host, port, false, timeout, 
             Threads.Atomic{UInt64}(1), 
             Dict{UInt64, Channel}(),
@@ -22,7 +22,7 @@ mutable struct REPEClient
     end
 end
 
-function connect(client::REPEClient)
+function connect(client::Client)
     lock(client.state_lock) do
         if client.connected
             return client
@@ -43,7 +43,7 @@ function connect(client::REPEClient)
     end
 end
 
-function disconnect(client::REPEClient)
+function disconnect(client::Client)
     lock(client.state_lock) do
         if !client.connected
             return
@@ -65,13 +65,13 @@ function disconnect(client::REPEClient)
     end
 end
 
-function get_next_id(client::REPEClient)::UInt64
+function get_next_id(client::Client)::UInt64
     # atomic_add! returns the old value and adds, so we get unique sequential IDs
     old_val = Threads.atomic_add!(client.next_id, UInt64(1))
     return old_val
 end
 
-function send_message(client::REPEClient, msg::REPEMessage)
+function send_message(client::Client, msg::Message)
     # Check connection without lock for fast path
     if !client.connected
         throw(ErrorException("Client not connected"))
@@ -86,13 +86,13 @@ function send_message(client::REPEClient, msg::REPEMessage)
     end
 end
 
-function send_notify(client::REPEClient, method::String, params = nothing; 
+function send_notify(client::Client, method::String, params = nothing; 
                     query_format::QueryFormat = QUERY_JSON_POINTER,
                     body_format::BodyFormat = BODY_JSON)
     
     body_bytes = params === nothing ? UInt8[] : encode_body(params, body_format)
     
-    msg = REPEMessage(
+    msg = Message(
         id = get_next_id(client),
         query = method,
         body = body_bytes,
@@ -105,7 +105,7 @@ function send_notify(client::REPEClient, method::String, params = nothing;
 end
 
 # Async version that returns a Task
-function send_request_async(client::REPEClient, method::String, params = nothing; 
+function send_request_async(client::Client, method::String, params = nothing; 
                            query_format::QueryFormat = QUERY_JSON_POINTER,
                            body_format::BodyFormat = BODY_JSON,
                            timeout::Union{Float64, Nothing} = nothing)
@@ -119,7 +119,7 @@ function send_request_async(client::REPEClient, method::String, params = nothing
 end
 
 # Internal synchronous implementation
-function send_request_sync(client::REPEClient, method::String, params = nothing; 
+function send_request_sync(client::Client, method::String, params = nothing; 
                           query_format::QueryFormat = QUERY_JSON_POINTER,
                           body_format::BodyFormat = BODY_JSON,
                           timeout::Union{Float64, Nothing} = nothing)
@@ -138,7 +138,7 @@ function send_request_sync(client::REPEClient, method::String, params = nothing;
     
     body_bytes = params === nothing ? UInt8[] : encode_body(params, body_format)
     
-    msg = REPEMessage(
+    msg = Message(
         id = request_id,
         query = method,
         body = body_bytes,
@@ -190,7 +190,7 @@ function send_request_sync(client::REPEClient, method::String, params = nothing;
 end
 
 # Backward compatible synchronous version
-function send_request(client::REPEClient, method::String, params = nothing; 
+function send_request(client::Client, method::String, params = nothing; 
                      query_format::QueryFormat = QUERY_JSON_POINTER,
                      body_format::BodyFormat = BODY_JSON,
                      timeout::Union{Float64, Nothing} = nothing)
@@ -201,7 +201,7 @@ function send_request(client::REPEClient, method::String, params = nothing;
                             timeout=timeout)
 end
 
-function handle_responses(client::REPEClient)
+function handle_responses(client::Client)
     buffer = UInt8[]
     
     while true
@@ -273,7 +273,7 @@ function handle_responses(client::REPEClient)
 end
 
 # Convenience function for concurrent batch requests
-function batch(client::REPEClient, requests::Vector{Tuple{String, Any}}; kwargs...)
+function batch(client::Client, requests::Vector{Tuple{String, Any}}; kwargs...)
     tasks = Task[]
     for (method, params) in requests
         task = send_request_async(client, method, params; kwargs...)
@@ -287,7 +287,7 @@ function await_batch(tasks::Vector{Task})
     return [fetch(task) for task in tasks]
 end
 
-function call_method(client::REPEClient, method::String, args...; kwargs...)
+function call_method(client::Client, method::String, args...; kwargs...)
     params = isempty(args) ? nothing : length(args) == 1 ? args[1] : args
     return send_request(client, method, params; kwargs...)
 end

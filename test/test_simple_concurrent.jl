@@ -4,7 +4,7 @@ using Test
 using REPE
 
 @testset "Simple Concurrent Test" begin
-    server = REPE.REPEServer("localhost", 9999)
+    server = REPE.Server("localhost", 9999)
     
     # Register handler
     REPE.register(server, "/echo", function(params, request)
@@ -25,7 +25,7 @@ using REPE
     
     @test server.running
     
-    client = REPE.REPEClient("localhost", 9999)
+    client = REPE.Client("localhost", 9999)
     
     try
         REPE.connect(client)

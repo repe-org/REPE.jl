@@ -1,6 +1,6 @@
 @testset "Header Tests" begin
     @testset "Header Creation" begin
-        header = REPE.REPEHeader()
+        header = REPE.Header()
         @test header.spec == REPE.REPE_SPEC
         @test header.version == REPE.REPE_VERSION
         @test header.notify == 0
@@ -12,7 +12,7 @@
     end
     
     @testset "Header Serialization" begin
-        header = REPE.REPEHeader(
+        header = REPE.Header(
             length = 100,
             id = 42,
             query_length = 10,
@@ -31,14 +31,14 @@
     end
     
     @testset "Header Validation" begin
-        header = REPE.REPEHeader(
+        header = REPE.Header(
             length = REPE.HEADER_SIZE + 10 + 20,
             query_length = 10,
             body_length = 20
         )
         @test REPE.validate_header(header) == true
         
-        bad_header = REPE.REPEHeader(
+        bad_header = REPE.Header(
             length = 100,
             spec = 0x0000,
             query_length = 10,
@@ -46,7 +46,7 @@
         )
         @test REPE.validate_header(bad_header) == false
         
-        bad_version = REPE.REPEHeader(
+        bad_version = REPE.Header(
             length = REPE.HEADER_SIZE,
             version = 0xFF
         )
@@ -54,7 +54,7 @@
     end
     
     @testset "Header Endianness" begin
-        header = REPE.REPEHeader(
+        header = REPE.Header(
             length = 0x0102030405060708,
             id = 0x090A0B0C0D0E0F10
         )

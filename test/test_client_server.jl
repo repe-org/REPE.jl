@@ -1,7 +1,7 @@
 @testset "Client-Server Tests" begin
     @testset "Basic RPC" begin
         port = 9001
-        server = REPE.REPEServer("localhost", port)
+        server = REPE.Server("localhost", port)
         
         REPE.register(server, "/add", function(params, request)
             result = params["a"] + params["b"]
@@ -29,7 +29,7 @@
             end
         end
         
-        client = REPE.REPEClient("localhost", port)
+        client = REPE.Client("localhost", port)
         REPE.connect(client)
         
         try
@@ -47,7 +47,7 @@
     
     @testset "Error Handling" begin
         port = 9002
-        server = REPE.REPEServer("localhost", port)
+        server = REPE.Server("localhost", port)
         
         REPE.register(server, "/divide", function(params, request)
             if params["b"] == 0
@@ -73,7 +73,7 @@
             end
         end
         
-        client = REPE.REPEClient("localhost", port)
+        client = REPE.Client("localhost", port)
         REPE.connect(client)
         
         try
@@ -90,7 +90,7 @@
     
     @testset "Notifications" begin
         port = 9003
-        server = REPE.REPEServer("localhost", port)
+        server = REPE.Server("localhost", port)
         
         received = Ref(false)
         REPE.register(server, "/notify", function(params, request)
@@ -115,7 +115,7 @@
             end
         end
         
-        client = REPE.REPEClient("localhost", port)
+        client = REPE.Client("localhost", port)
         REPE.connect(client)
         
         try
@@ -131,7 +131,7 @@
     
     @testset "Different Formats" begin
         port = 9004
-        server = REPE.REPEServer("localhost", port)
+        server = REPE.Server("localhost", port)
         
         REPE.register(server, "/process", function(params, request)
             if request.header.body_format == UInt16(REPE.BODY_JSON)
@@ -160,7 +160,7 @@
             end
         end
         
-        client = REPE.REPEClient("localhost", port)
+        client = REPE.Client("localhost", port)
         REPE.connect(client)
         
         try

@@ -7,7 +7,7 @@ println("Testing async functionality...")
 println("Threads available: ", Threads.nthreads())
 
 # Create server
-server = REPE.REPEServer("localhost", 9999)
+server = REPE.Server("localhost", 9999)
 
 # Register a simple handler
 REPE.register(server, "/echo", function(params, request)
@@ -20,7 +20,7 @@ end)
 sleep(2)  # Give server more time to start
 
 # Create client
-client = REPE.REPEClient("localhost", 9999)
+client = REPE.Client("localhost", 9999)
 REPE.connect(client)
 
 try

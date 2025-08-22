@@ -1,4 +1,4 @@
-mutable struct REPEHeader
+mutable struct Header
     length::UInt64
     spec::UInt16
     version::UInt8
@@ -11,7 +11,7 @@ mutable struct REPEHeader
     body_format::UInt16
     ec::UInt32
     
-    function REPEHeader(;
+    function Header(;
         length::Union{UInt64, Int} = 0,
         spec::Union{UInt16, Int} = REPE_SPEC,
         version::Union{UInt8, Int} = REPE_VERSION,
@@ -30,7 +30,7 @@ mutable struct REPEHeader
     end
 end
 
-function serialize_header(header::REPEHeader)::Vector{UInt8}
+function serialize_header(header::Header)::Vector{UInt8}
     buffer = Vector{UInt8}(undef, HEADER_SIZE)
     
     offset = 1
@@ -69,12 +69,12 @@ function serialize_header(header::REPEHeader)::Vector{UInt8}
     return buffer
 end
 
-function deserialize_header(buffer::Vector{UInt8})::REPEHeader
+function deserialize_header(buffer::Vector{UInt8})::Header
     if length(buffer) < HEADER_SIZE
         throw(ArgumentError("Buffer too small for REPE header"))
     end
     
-    header = REPEHeader()
+    header = Header()
     
     offset = 1
     header.length = reinterpret(UInt64, buffer[offset:offset+7])[1]
@@ -125,7 +125,7 @@ function deserialize_header(buffer::Vector{UInt8})::REPEHeader
     return header
 end
 
-function validate_header(header::REPEHeader)::Bool
+function validate_header(header::Header)::Bool
     if header.spec != REPE_SPEC
         return false
     end

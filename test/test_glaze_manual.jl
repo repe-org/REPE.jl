@@ -5,7 +5,7 @@ using Test
 
 println("Testing Julia client with Glaze C++ server on port 9999...")
 
-client = REPE.REPEClient("localhost", 9999)
+client = REPE.Client("localhost", 9999)
 
 try
     REPE.connect(client)

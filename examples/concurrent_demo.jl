@@ -14,7 +14,7 @@ println()
 println("1. Thread-safe ID generation")
 println("-----------------------------")
 
-client = REPE.REPEClient("localhost", 8080)
+client = REPE.Client("localhost", 8080)
 
 # Generate IDs from multiple threads concurrently
 if Threads.nthreads() > 1
@@ -148,7 +148,7 @@ if Threads.nthreads() > 1
             "utf8_data_$i"
         end
         
-        msg = REPE.REPEMessage(
+        msg = REPE.Message(
             id = i,
             query = "/test_$i",
             body = body_data,

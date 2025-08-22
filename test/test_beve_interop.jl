@@ -36,7 +36,7 @@ println("✅ C++ server detected at $SERVER_HOST:$SERVER_PORT")
 println()
 
 # Create client and connect
-client = REPE.REPEClient(SERVER_HOST, SERVER_PORT)
+client = REPE.Client(SERVER_HOST, SERVER_PORT)
 REPE.connect(client)
 println("Connected to C++ server")
 println()

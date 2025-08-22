@@ -1,7 +1,7 @@
 @testset "Simple Client-Server Tests" begin
     @testset "Message Round-trip" begin
         # Test that a message can be serialized and deserialized correctly
-        request = REPE.REPEMessage(
+        request = REPE.Message(
             id = 123,
             query = "/test/method",
             body = Dict("param" => "value"),
@@ -17,7 +17,7 @@
     end
     
     @testset "Handler Registration" begin
-        server = REPE.REPEServer("localhost", 9999)
+        server = REPE.Server("localhost", 9999)
         
         handler_called = Ref(false)
         REPE.register(server, "/test", function(params, request)
@@ -28,7 +28,7 @@
         @test haskey(server.handlers, "/test")
         
         # Simulate processing a request
-        request = REPE.REPEMessage(
+        request = REPE.Message(
             id = 456,
             query = "/test",
             body = Dict("data" => "test"),
@@ -42,10 +42,10 @@
     end
     
     @testset "Error Response" begin
-        server = REPE.REPEServer("localhost", 9998)
+        server = REPE.Server("localhost", 9998)
         
         # Request to non-existent handler
-        request = REPE.REPEMessage(
+        request = REPE.Message(
             id = 789,
             query = "/nonexistent",
             body = "",
@@ -59,7 +59,7 @@
     end
     
     @testset "Middleware" begin
-        server = REPE.REPEServer("localhost", 9997)
+        server = REPE.Server("localhost", 9997)
         
         middleware_called = Ref(false)
         REPE.use(server, function(request)
@@ -71,7 +71,7 @@
             return Dict("result" => "ok")
         end)
         
-        request = REPE.REPEMessage(
+        request = REPE.Message(
             id = 101,
             query = "/test",
             body = "",

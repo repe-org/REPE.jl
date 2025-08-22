@@ -1,6 +1,6 @@
 using REPE
 
-client = REPEClient("localhost", 8080)
+client = REPE.Client("localhost", 8080)
 
 connect(client)
 

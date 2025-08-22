@@ -23,7 +23,7 @@ println("Async results: ", results)
 
 # Test 2: Test the client's async methods without server connection
 println("\nTesting client async methods (no server)...")
-client = REPE.REPEClient("localhost", 9999)
+client = REPE.Client("localhost", 9999)
 
 # Test ID generation
 ids = []

@@ -1,7 +1,7 @@
 @testset "Concurrent Client Tests (Simple)" begin
     
     @testset "Thread-safe ID generation" begin
-        client = REPE.REPEClient("localhost", 9876)
+        client = REPE.Client("localhost", 9876)
         
         # Generate IDs from multiple threads
         ids = Vector{UInt64}(undef, 1000)
@@ -16,7 +16,7 @@
     end
     
     @testset "Lock functionality" begin
-        client = REPE.REPEClient("localhost", 9999)
+        client = REPE.Client("localhost", 9999)
         
         # Test that locks can be acquired and released
         @test lock(client.state_lock) do
@@ -33,7 +33,7 @@
     end
     
     @testset "Concurrent dictionary access" begin
-        client = REPE.REPEClient("localhost", 9999)
+        client = REPE.Client("localhost", 9999)
         
         # Simulate concurrent access to pending_requests
         n_threads = 10
@@ -63,7 +63,7 @@
     end
     
     @testset "Async task creation" begin
-        client = REPE.REPEClient("localhost", 9999)
+        client = REPE.Client("localhost", 9999)
         
         # Create multiple async tasks (without actually connecting)
         tasks = Task[]
@@ -83,7 +83,7 @@
     end
     
     @testset "Batch operations setup" begin
-        client = REPE.REPEClient("localhost", 9999)
+        client = REPE.Client("localhost", 9999)
         
         # Test batch request preparation (without sending)
         requests = [
@@ -103,7 +103,7 @@
         messages = Vector{Vector{UInt8}}(undef, 100)
         
         Threads.@threads for i in 1:100
-            msg = REPE.REPEMessage(
+            msg = REPE.Message(
                 id = i,
                 query = "/test",
                 body = "data-$i",
@@ -121,7 +121,7 @@
     end
     
     @testset "Atomic operations" begin
-        client = REPE.REPEClient("localhost", 9999)
+        client = REPE.Client("localhost", 9999)
         
         # Test atomic increment from multiple threads
         start_val = client.next_id[]

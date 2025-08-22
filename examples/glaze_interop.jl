@@ -2,7 +2,7 @@ using REPE
 using Sockets
 
 function connect_to_glaze_server(host::String = "localhost", port::Int = 8081)
-    client = REPEClient(host, port)
+    client = REPE.Client(host, port)
     connect(client)
     
     println("Connected to Glaze C++ server at $host:$port")
@@ -31,7 +31,7 @@ function connect_to_glaze_server(host::String = "localhost", port::Int = 8081)
 end
 
 function create_compatible_server(port::Int = 8082)
-    server = REPEServer("0.0.0.0", port)
+    server = REPE.Server("0.0.0.0", port)
     
     REPE.register(server, "/test/echo", function(params, request)
         return params

@@ -22,7 +22,7 @@ basic_data = Dict(
 )
 
 # Create message with BEVE format
-beve_msg = REPE.REPEMessage(
+beve_msg = REPE.Message(
     id = 1,
     query = "/user/profile",
     body = basic_data,
@@ -61,7 +61,7 @@ catch e
     
     # Create a simpler example that should work
     simple_data = Dict("id" => 123, "name" => "test")
-    simple_msg = REPE.REPEMessage(id=2, query="/simple", body=simple_data, body_format=UInt16(REPE.BODY_BEVE))
+    simple_msg = REPE.Message(id=2, query="/simple", body=simple_data, body_format=UInt16(REPE.BODY_BEVE))
     simple_serialized = REPE.serialize_message(simple_msg)
     simple_deserialized = REPE.deserialize_message(simple_serialized)
     simple_parsed = REPE.parse_body(simple_deserialized)
@@ -132,7 +132,7 @@ complex_data = Dict(
 )
 
 # Create and process BEVE message
-complex_msg = REPE.REPEMessage(
+complex_msg = REPE.Message(
     id = 2,
     query = "/sensors/data",
     body = complex_data,
@@ -157,7 +157,7 @@ println("------------------------------")
 
 # Test with invalid BEVE data
 try
-    invalid_msg = REPE.REPEMessage(
+    invalid_msg = REPE.Message(
         query = "/test",
         body = UInt8[0xFF, 0xFE, 0xFD],  # Invalid BEVE data
         body_format = UInt16(REPE.BODY_BEVE)

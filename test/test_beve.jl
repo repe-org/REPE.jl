@@ -3,7 +3,7 @@
     @testset "BEVE Message Creation" begin
         data = Dict("number" => 42, "text" => "hello", "array" => [1, 2, 3])
         
-        msg = REPE.REPEMessage(
+        msg = REPE.Message(
             id = 123,
             query = "/test/beve",
             body = data,
@@ -32,7 +32,7 @@
         @test length(encoded) > 0
         
         # Test decoding
-        msg = REPE.REPEMessage(
+        msg = REPE.Message(
             query = "/test",
             body = encoded,
             body_format = UInt16(REPE.BODY_BEVE)
@@ -62,7 +62,7 @@
         )
         
         # Create message with BEVE format
-        request = REPE.REPEMessage(
+        request = REPE.Message(
             id = 456,
             query = "/user/profile",
             body = original_data,
@@ -116,8 +116,8 @@
         println("  BEVE is $(round((1 - length(beve_encoded)/length(json_encoded)) * 100, digits=1))% smaller")
         
         # Verify both decode to the same content
-        beve_msg = REPE.REPEMessage(query="/test", body=beve_encoded, body_format=UInt16(REPE.BODY_BEVE))
-        json_msg = REPE.REPEMessage(query="/test", body=json_encoded, body_format=UInt16(REPE.BODY_JSON))
+        beve_msg = REPE.Message(query="/test", body=beve_encoded, body_format=UInt16(REPE.BODY_BEVE))
+        json_msg = REPE.Message(query="/test", body=json_encoded, body_format=UInt16(REPE.BODY_JSON))
         
         beve_decoded = REPE.parse_body(beve_msg)
         json_decoded = REPE.parse_body(json_msg)
@@ -131,7 +131,7 @@
         # Test with invalid BEVE data
         invalid_data = UInt8[0x01, 0x02, 0x03]  # Invalid BEVE format
         
-        msg = REPE.REPEMessage(
+        msg = REPE.Message(
             query = "/test",
             body = invalid_data,
             body_format = UInt16(REPE.BODY_BEVE)
@@ -156,7 +156,7 @@
         for (i, test_data) in enumerate(test_cases)
             # Test round-trip
             encoded = REPE.encode_body(test_data, REPE.BODY_BEVE)
-            msg = REPE.REPEMessage(query="/test$i", body=encoded, body_format=UInt16(REPE.BODY_BEVE))
+            msg = REPE.Message(query="/test$i", body=encoded, body_format=UInt16(REPE.BODY_BEVE))
             decoded = REPE.parse_body(msg)
             
             # Basic structure should match

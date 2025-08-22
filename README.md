@@ -37,7 +37,7 @@ Pkg.add(url="https://github.com/stephenberry/REPE.jl")
 using REPE
 
 # Create server
-server = REPEServer("localhost", 8080)
+server = Server("localhost", 8080)
 
 # Register handlers
 REPE.register(server, "/api/add", function(params, request)
@@ -54,7 +54,7 @@ listen(server)
 using REPE
 
 # Create and connect client
-client = REPEClient("localhost", 8080)
+client = Client("localhost", 8080)
 connect(client)
 
 # Make RPC call
@@ -122,7 +122,7 @@ Application-specific error codes start at 4096.
 ### Custom Middleware
 
 ```julia
-server = REPEServer("localhost", 8080)
+server = Server("localhost", 8080)
 
 # Add logging middleware
 REPE.use(server, function(request)
@@ -168,7 +168,7 @@ result = send_request(client, "/api/binary",
 
 ```julia
 # Set default timeout for client
-client = REPEClient("localhost", 8080, timeout=10.0)
+client = Client("localhost", 8080, timeout=10.0)
 
 # Override timeout for specific request
 result = send_request(client, "/api/slow", params, timeout=60.0)
@@ -206,7 +206,7 @@ The repository includes a complete C++ REPE server implementation using Glaze's 
 
 ```julia
 # Connect to Glaze C++ server
-client = REPEClient("localhost", 8081)
+client = Client("localhost", 8081)
 connect(client)
 
 # Call C++ methods from Julia
@@ -266,7 +266,7 @@ sensor_data = Dict(
 )
 
 # Send with BEVE encoding
-client = REPEClient("localhost", 8080)
+client = Client("localhost", 8080)
 connect(client)
 
 result = send_request(client, "/sensors/upload",

@@ -1,6 +1,6 @@
 @testset "Message Tests" begin
     @testset "Message Creation" begin
-        msg = REPE.REPEMessage(
+        msg = REPE.Message(
             id = 123,
             query = "test/method",
             body = "hello world"
@@ -14,7 +14,7 @@
     end
     
     @testset "Message Serialization" begin
-        msg = REPE.REPEMessage(
+        msg = REPE.Message(
             id = 456,
             query = "/api/test",
             body = Dict("key" => "value"),
@@ -45,7 +45,7 @@
     end
     
     @testset "Body Parsing" begin
-        json_msg = REPE.REPEMessage(
+        json_msg = REPE.Message(
             query = "test",
             body = Dict("result" => 42),
             body_format = UInt16(REPE.BODY_JSON)
@@ -53,7 +53,7 @@
         parsed = REPE.parse_body(json_msg)
         @test parsed["result"] == 42
         
-        text_msg = REPE.REPEMessage(
+        text_msg = REPE.Message(
             query = "test",
             body = "plain text",
             body_format = UInt16(REPE.BODY_UTF8)
@@ -73,14 +73,14 @@
     end
     
     @testset "Notify Messages" begin
-        msg = REPE.REPEMessage(
+        msg = REPE.Message(
             query = "notification",
             body = "data",
             notify = true
         )
         @test msg.header.notify == 0x01
         
-        msg2 = REPE.REPEMessage(
+        msg2 = REPE.Message(
             query = "request",
             body = "data",
             notify = false

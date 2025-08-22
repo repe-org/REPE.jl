@@ -1,9 +1,9 @@
-struct REPEMessage
-    header::REPEHeader
+struct Message
+    header::Header
     query::Vector{UInt8}
     body::Vector{UInt8}
     
-    function REPEMessage(header::REPEHeader, query::Vector{UInt8}, body::Vector{UInt8})
+    function Message(header::Header, query::Vector{UInt8}, body::Vector{UInt8})
         if length(query) != header.query_length
             throw(ArgumentError("Query length mismatch"))
         end
@@ -14,7 +14,7 @@ struct REPEMessage
     end
 end
 
-function REPEMessage(;
+function Message(;
     id::Union{UInt64, Int} = 0,
     query::Union{String, Vector{UInt8}} = UInt8[],
     body::Any = nothing,
@@ -47,7 +47,7 @@ function REPEMessage(;
     body_length = UInt64(length(body_bytes))
     total_length = HEADER_SIZE + query_length + body_length
     
-    header = REPEHeader(
+    header = Header(
         length = total_length,
         id = UInt64(id),
         query_length = query_length,
@@ -58,10 +58,10 @@ function REPEMessage(;
         ec = UInt32(ec)
     )
     
-    return REPEMessage(header, query_bytes, body_bytes)
+    return Message(header, query_bytes, body_bytes)
 end
 
-function serialize_message(msg::REPEMessage)::Vector{UInt8}
+function serialize_message(msg::Message)::Vector{UInt8}
     header_bytes = serialize_header(msg.header)
     
     total_size = HEADER_SIZE + length(msg.query) + length(msg.body)
@@ -82,7 +82,7 @@ function serialize_message(msg::REPEMessage)::Vector{UInt8}
     return buffer
 end
 
-function deserialize_message(buffer::Vector{UInt8})::REPEMessage
+function deserialize_message(buffer::Vector{UInt8})::Message
     if length(buffer) < HEADER_SIZE
         throw(ArgumentError("Buffer too small for REPE message"))
     end
@@ -100,10 +100,10 @@ function deserialize_message(buffer::Vector{UInt8})::REPEMessage
     offset += header.query_length
     body = buffer[offset:offset+header.body_length-1]
     
-    return REPEMessage(header, query, body)
+    return Message(header, query, body)
 end
 
-function parse_query(msg::REPEMessage)::String
+function parse_query(msg::Message)::String
     if msg.header.query_format == UInt16(QUERY_JSON_POINTER)
         return String(msg.query)
     elseif msg.header.query_format == UInt16(QUERY_RAW_BINARY)
@@ -113,7 +113,7 @@ function parse_query(msg::REPEMessage)::String
     end
 end
 
-function parse_body(msg::REPEMessage)
+function parse_body(msg::Message)
     if msg.header.body_format == UInt16(BODY_JSON)
         return JSON3.read(msg.body)
     elseif msg.header.body_format == UInt16(BODY_BEVE)
@@ -150,10 +150,10 @@ function encode_body(data, format::BodyFormat)::Vector{UInt8}
     end
 end
 
-function create_error_message(ec::ErrorCode, msg::String = "")::REPEMessage
+function create_error_message(ec::ErrorCode, msg::String = "")::Message
     error_msg = isempty(msg) ? get(ERROR_MESSAGES, ec, "Unknown error") : msg
     
-    return REPEMessage(
+    return Message(
         query = "",
         body = error_msg,
         body_format = UInt16(BODY_UTF8),
@@ -161,10 +161,10 @@ function create_error_message(ec::ErrorCode, msg::String = "")::REPEMessage
     )
 end
 
-function create_response(request::REPEMessage, result; body_format::BodyFormat = BODY_JSON)::REPEMessage
+function create_response(request::Message, result; body_format::BodyFormat = BODY_JSON)::Message
     body_bytes = encode_body(result, body_format)
     
-    return REPEMessage(
+    return Message(
         id = request.header.id,
         query = request.query,
         body = body_bytes,

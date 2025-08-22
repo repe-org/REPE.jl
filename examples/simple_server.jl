@@ -1,6 +1,6 @@
 using REPE
 
-server = REPEServer("localhost", 8080)
+server = REPE.Server("localhost", 8080)
 
 REPE.register(server, "/api/add", function(params, request)
     a = get(params, "a", 0)

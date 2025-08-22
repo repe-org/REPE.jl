@@ -13,7 +13,7 @@ println("Waiting for C++ server to start...")
 sleep(2)
 
 @testset "Glaze C++ Server Integration" begin
-    client = REPE.REPEClient("localhost", 8081)
+    client = REPE.Client("localhost", 8081)
     
     try
         REPE.connect(client)

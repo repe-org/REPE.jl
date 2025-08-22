@@ -1,4 +1,4 @@
-mutable struct REPEServer
+mutable struct Server
     host::String
     port::Int
     server::Union{Sockets.TCPServer, Nothing}
@@ -6,20 +6,20 @@ mutable struct REPEServer
     handlers::Dict{String, Function}
     middleware::Vector{Function}
     
-    function REPEServer(host::String = "localhost", port::Int = 8080)
+    function Server(host::String = "localhost", port::Int = 8080)
         new(host, port, nothing, false, Dict{String, Function}(), Function[])
     end
 end
 
-function register(server::REPEServer, method::String, handler::Function)
+function register(server::Server, method::String, handler::Function)
     server.handlers[method] = handler
 end
 
-function use(server::REPEServer, middleware::Function)
+function use(server::Server, middleware::Function)
     push!(server.middleware, middleware)
 end
 
-function start_server(server::REPEServer)
+function start_server(server::Server)
     if server.running
         return
     end
@@ -44,7 +44,7 @@ function start_server(server::REPEServer)
     end
 end
 
-function stop_server(server::REPEServer)
+function stop_server(server::Server)
     if !server.running
         return
     end
@@ -59,7 +59,7 @@ function stop_server(server::REPEServer)
     @info "REPE Server stopped"
 end
 
-function handle_client(server::REPEServer, client::TCPSocket)
+function handle_client(server::Server, client::TCPSocket)
     @info "Client connected"
     
     try
@@ -101,12 +101,12 @@ function handle_client(server::REPEServer, client::TCPSocket)
     end
 end
 
-function process_request(server::REPEServer, request::REPEMessage)::REPEMessage
+function process_request(server::Server, request::Message)::Message
     try
         for middleware in server.middleware
             result = middleware(request)
             if result !== nothing
-                if result isa REPEMessage
+                if result isa Message
                     return result
                 elseif result isa ErrorCode
                     return create_error_response(request, result)
@@ -127,7 +127,7 @@ function process_request(server::REPEServer, request::REPEMessage)::REPEMessage
         
         result = handler(params, request)
         
-        if result isa REPEMessage
+        if result isa Message
             return result
         else
             return create_response(request, result)
@@ -139,10 +139,10 @@ function process_request(server::REPEServer, request::REPEMessage)::REPEMessage
     end
 end
 
-function create_error_response(request::REPEMessage, ec::ErrorCode, msg::String = "")::REPEMessage
+function create_error_response(request::Message, ec::ErrorCode, msg::String = "")::Message
     error_msg = isempty(msg) ? get(ERROR_MESSAGES, ec, "Unknown error") : msg
     
-    return REPEMessage(
+    return Message(
         id = request.header.id,
         query = request.query,
         body = error_msg,
@@ -152,7 +152,7 @@ function create_error_response(request::REPEMessage, ec::ErrorCode, msg::String 
     )
 end
 
-function listen(server::REPEServer; async::Bool = false)
+function listen(server::Server; async::Bool = false)
     if async
         @async start_server(server)
     else
@@ -170,7 +170,7 @@ macro rpc_handler(server, method, body)
 end
 
 function create_json_rpc_server(host::String = "localhost", port::Int = 8080)
-    server = REPEServer(host, port)
+    server = Server(host, port)
     
     use(server, function(request)
         if request.header.query_format != UInt16(QUERY_JSON_POINTER)

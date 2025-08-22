@@ -14,7 +14,7 @@ println("Waiting for server to start...")
 sleep(2)
 
 println("Testing improved divide function...")
-client = REPEClient("localhost", 10003)
+client = Client("localhost", 10003)
 
 try
     connect(client)

@@ -12,7 +12,7 @@ function Base.showerror(io::IO, e::REPEError)
     print(io, "REPEError($(Int(e.code))): $(e.message)")
 end
 
-function check_error(msg::REPEMessage)
+function check_error(msg::Message)
     if msg.header.ec != UInt32(EC_OK)
         error_msg = isempty(msg.body) ? "" : String(msg.body)
         throw(REPEError(ErrorCode(msg.header.ec), error_msg))
@@ -28,7 +28,7 @@ function Base.showerror(io::IO, e::ValidationError)
     print(io, "ValidationError in field '$(e.field)': $(e.message)")
 end
 
-function validate_message(msg::REPEMessage)
+function validate_message(msg::Message)
     if !validate_header(msg.header)
         throw(ValidationError("header", "Invalid REPE header"))
     end

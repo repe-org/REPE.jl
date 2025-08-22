@@ -10,11 +10,11 @@ println("Julia threads available: ", Threads.nthreads())
 println()
 
 # Connect to server
-client = REPE.REPEClient("localhost", 8080)
+client = REPE.Client("localhost", 8080)
 
 # For demonstration, we'll create a simple local server
 println("Starting local test server...")
-server = REPE.REPEServer("localhost", 8080)
+server = REPE.Server("localhost", 8080)
 
 # Register some handlers that simulate different processing times
 REPE.register(server, "/fast", function(params, request)
