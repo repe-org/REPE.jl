@@ -75,7 +75,7 @@ requests = Tuple{String, Any}[
 ]
 
 println("Preparing batch of $(length(requests)) requests...")
-batch_tasks = REPE.send_batch_async(client, requests, body_format = REPE.BODY_JSON)
+batch_tasks = REPE.batch(client, requests, body_format = REPE.BODY_JSON)
 println("  Created $(length(batch_tasks)) batch tasks")
 println("  Batch task types: $(typeof(batch_tasks))")
 

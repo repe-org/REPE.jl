@@ -15,7 +15,7 @@ function register(server::REPEServer, method::String, handler::Function)
     server.handlers[method] = handler
 end
 
-function add_middleware(server::REPEServer, middleware::Function)
+function use(server::REPEServer, middleware::Function)
     push!(server.middleware, middleware)
 end
 
@@ -152,7 +152,7 @@ function create_error_response(request::REPEMessage, ec::ErrorCode, msg::String 
     )
 end
 
-function listen_server(server::REPEServer; async::Bool = false)
+function listen(server::REPEServer; async::Bool = false)
     if async
         @async start_server(server)
     else
@@ -172,7 +172,7 @@ end
 function create_json_rpc_server(host::String = "localhost", port::Int = 8080)
     server = REPEServer(host, port)
     
-    add_middleware(server, function(request)
+    use(server, function(request)
         if request.header.query_format != UInt16(QUERY_JSON_POINTER)
             return nothing
         end

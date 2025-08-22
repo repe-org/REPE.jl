@@ -273,7 +273,7 @@ function handle_responses(client::REPEClient)
 end
 
 # Convenience function for concurrent batch requests
-function send_batch_async(client::REPEClient, requests::Vector{Tuple{String, Any}}; kwargs...)
+function batch(client::REPEClient, requests::Vector{Tuple{String, Any}}; kwargs...)
     tasks = Task[]
     for (method, params) in requests
         task = send_request_async(client, method, params; kwargs...)
@@ -283,7 +283,7 @@ function send_batch_async(client::REPEClient, requests::Vector{Tuple{String, Any
 end
 
 # Wait for all tasks and collect results
-function fetch_batch(tasks::Vector{Task})
+function await_batch(tasks::Vector{Task})
     return [fetch(task) for task in tasks]
 end
 

@@ -8,8 +8,8 @@ using BEVE
 export REPEHeader, REPEMessage, REPEClient, REPEServer
 export ErrorCode, QueryFormat, BodyFormat
 export send_request, send_request_async, send_notify, parse_message, build_message
-export send_batch_async, fetch_batch
-export connect, disconnect, listen_server
+export batch, await_batch
+export connect, disconnect, listen
 
 include("constants.jl")
 include("header.jl")

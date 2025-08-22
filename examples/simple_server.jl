@@ -27,7 +27,7 @@ REPE.register(server, "/api/log", function(params, request)
     return Dict("status" => "logged")
 end)
 
-add_middleware(server, function(request)
+REPE.use(server, function(request)
     println("Request: ", parse_query(request))
     return nothing
 end)

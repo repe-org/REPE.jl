@@ -98,11 +98,11 @@ try
     ]
     
     start_time = time()
-    batch_tasks = REPE.send_batch_async(client, batch_requests, body_format = REPE.BODY_JSON)
+    batch_tasks = REPE.batch(client, batch_requests, body_format = REPE.BODY_JSON)
     
     println("Batch of $(length(batch_requests)) requests sent")
     
-    batch_results = REPE.fetch_batch(batch_tasks)
+    batch_results = REPE.await_batch(batch_tasks)
     for (i, result) in enumerate(batch_results)
         println("  Request $i: $(result)")
     end
@@ -152,7 +152,7 @@ try
     end
     
     # Wait for all to complete
-    stress_results = REPE.fetch_batch(stress_tasks)
+    stress_results = REPE.await_batch(stress_tasks)
     elapsed = time() - start_time
     
     println("Completed $n_requests requests in $(round(elapsed, digits=2))s")

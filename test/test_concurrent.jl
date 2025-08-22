@@ -86,10 +86,10 @@
             ]
             
             # Send all requests concurrently
-            tasks = REPE.send_batch_async(client, requests, body_format = REPE.BODY_JSON)
+            tasks = REPE.batch(client, requests, body_format = REPE.BODY_JSON)
             
             # Fetch all results
-            results = REPE.fetch_batch(tasks)
+            results = REPE.await_batch(tasks)
             
             @test results[1]["result"] == 3   # 1 + 2
             @test results[2]["result"] == 12  # 3 * 4

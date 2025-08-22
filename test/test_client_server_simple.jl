@@ -62,7 +62,7 @@
         server = REPE.REPEServer("localhost", 9997)
         
         middleware_called = Ref(false)
-        REPE.add_middleware(server, function(request)
+        REPE.use(server, function(request)
             middleware_called[] = true
             return nothing  # Continue processing
         end)
