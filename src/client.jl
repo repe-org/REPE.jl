@@ -22,14 +22,61 @@ mutable struct Client
     end
 end
 
+function _resolve_addresses(host::String)::Vector{Sockets.IPAddr}
+    addresses = Sockets.IPAddr[]
+    for family in (Sockets.IPv6, Sockets.IPv4)
+        try
+            addr = Sockets.getaddrinfo(host, family)
+            push!(addresses, addr)
+        catch
+            # Ignore resolution failures for this address family
+        end
+    end
+
+    if isempty(addresses)
+        try
+            push!(addresses, Sockets.getaddrinfo(host))
+        catch e
+            error(ErrorException("Failed to resolve host $host: $(e)"))
+        end
+    end
+
+    unique_addrs = Sockets.IPAddr[]
+    for addr in addresses
+        if !any(existing -> existing == addr, unique_addrs)
+            push!(unique_addrs, addr)
+        end
+    end
+
+    return unique_addrs
+end
+
+function _connect_socket(host::String, port::Int)
+    last_error = nothing
+
+    for addr in _resolve_addresses(host)
+        try
+            return Sockets.connect(addr, port)
+        catch e
+            last_error = e
+        end
+    end
+
+    if last_error !== nothing
+        throw(last_error)
+    else
+        error(ErrorException("No addresses available for host $host"))
+    end
+end
+
 function connect(client::Client)
     lock(client.state_lock) do
         if client.connected
             return client
         end
-        
+
         try
-            client.socket = Sockets.connect(client.host, client.port)
+            client.socket = _connect_socket(client.host, client.port)
             client.connected = true
             
             # Start the response handler
@@ -93,7 +140,7 @@ function send_notify(client::Client, method::String, params = nothing;
     body_bytes = params === nothing ? UInt8[] : encode_body(params, body_format)
     
     msg = Message(
-        id = get_next_id(client),
+        id = _get_next_id(client),
         query = method,
         body = body_bytes,
         query_format = UInt16(query_format),
@@ -273,7 +320,7 @@ function _handle_responses(client::Client)
 end
 
 # Convenience function for concurrent batch requests
-function batch(client::Client, requests::Vector{Tuple{String, Any}}; kwargs...)
+function batch(client::Client, requests::AbstractVector{<:Tuple{String, Any}}; kwargs...)
     tasks = Task[]
     for (method, params) in requests
         task = send_request_async(client, method, params; kwargs...)
@@ -297,4 +344,3 @@ function Base.show(io::IO, client::Client)
     status = client.connected ? "connected" : "disconnected"
     print(io, "Client(\"$(client.host):$(client.port)\", $status)")
 end
-

@@ -13,21 +13,8 @@
         end)
         
         # Start server in background and wait for it to be ready
-        @async REPE._start_server(server)
-        
-        # Wait for server to actually start listening
-        for i in 1:50
-            try
-                test_socket = Sockets.connect("localhost", port)
-                close(test_socket)
-                break
-            catch
-                sleep(0.1)
-                if i == 50
-                    error("Server failed to start")
-                end
-            end
-        end
+        REPE.listen(server; async=true)
+        REPE.wait_for_server(server.host, port)
         
         client = REPE.Client("localhost", port)
         REPE.connect(client)
@@ -41,7 +28,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE._stop_server(server)
+            REPE.stop(server)
         end
     end
     
@@ -57,21 +44,8 @@
         end)
         
         # Start server in background and wait for it to be ready
-        @async REPE._start_server(server)
-        
-        # Wait for server to actually start listening
-        for i in 1:50
-            try
-                test_socket = Sockets.connect("localhost", port)
-                close(test_socket)
-                break
-            catch
-                sleep(0.1)
-                if i == 50
-                    error("Server failed to start")
-                end
-            end
-        end
+        REPE.listen(server; async=true)
+        REPE.wait_for_server(server.host, port)
         
         client = REPE.Client("localhost", port)
         REPE.connect(client)
@@ -84,7 +58,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE._stop_server(server)
+            REPE.stop(server)
         end
     end
     
@@ -99,21 +73,8 @@
         end)
         
         # Start server in background and wait for it to be ready
-        @async REPE._start_server(server)
-        
-        # Wait for server to actually start listening
-        for i in 1:50
-            try
-                test_socket = Sockets.connect("localhost", port)
-                close(test_socket)
-                break
-            catch
-                sleep(0.1)
-                if i == 50
-                    error("Server failed to start")
-                end
-            end
-        end
+        REPE.listen(server; async=true)
+        REPE.wait_for_server(server.host, port)
         
         client = REPE.Client("localhost", port)
         REPE.connect(client)
@@ -125,7 +86,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE._stop_server(server)
+            REPE.stop(server)
         end
     end
     
@@ -144,21 +105,8 @@
         end)
         
         # Start server in background and wait for it to be ready
-        @async REPE._start_server(server)
-        
-        # Wait for server to actually start listening
-        for i in 1:50
-            try
-                test_socket = Sockets.connect("localhost", port)
-                close(test_socket)
-                break
-            catch
-                sleep(0.1)
-                if i == 50
-                    error("Server failed to start")
-                end
-            end
-        end
+        REPE.listen(server; async=true)
+        REPE.wait_for_server(server.host, port)
         
         client = REPE.Client("localhost", port)
         REPE.connect(client)
@@ -176,7 +124,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE._stop_server(server)
+            REPE.stop(server)
         end
     end
 end

@@ -27,8 +27,8 @@
         end)
         
         # Start server in background
-        @async REPE._start_server(server)
-        sleep(1.0)  # Wait for server to start
+        REPE.listen(server; async=true)
+        REPE.wait_for_server(server.host, server.port)
         
         client = REPE.Client("localhost", 9877)
         REPE.connect(client)
@@ -55,7 +55,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE._stop_server(server)
+            REPE.stop(server)
         end
     end
     
@@ -70,8 +70,8 @@
             return Dict("result" => params["x"] * params["y"])
         end)
         
-        @async REPE._start_server(server)
-        sleep(1.0)
+        REPE.listen(server; async=true)
+        REPE.wait_for_server(server.host, server.port)
         
         client = REPE.Client("localhost", 9878)
         REPE.connect(client)
@@ -98,7 +98,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE._stop_server(server)
+            REPE.stop(server)
         end
     end
     
@@ -111,8 +111,8 @@
             return Dict("count" => counter[])
         end)
         
-        @async REPE._start_server(server)
-        sleep(1.0)
+        REPE.listen(server; async=true)
+        REPE.wait_for_server(server.host, server.port)
         
         client = REPE.Client("localhost", 9879)
         REPE.connect(client)
@@ -153,7 +153,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE._stop_server(server)
+            REPE.stop(server)
         end
     end
     
@@ -164,8 +164,8 @@
             return params
         end)
         
-        @async REPE._start_server(server)
-        sleep(1.0)
+        REPE.listen(server; async=true)
+        REPE.wait_for_server(server.host, server.port)
         
         client = REPE.Client("localhost", 9880)
         REPE.connect(client)
@@ -209,7 +209,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE._stop_server(server)
+            REPE.stop(server)
         end
     end
     
@@ -224,8 +224,8 @@
             return Dict("result" => value * 2)
         end)
         
-        @async REPE._start_server(server)
-        sleep(1.0)
+        REPE.listen(server; async=true)
+        REPE.wait_for_server(server.host, server.port)
         
         client = REPE.Client("localhost", 9881)
         REPE.connect(client)
@@ -260,7 +260,7 @@
             
         finally
             REPE.disconnect(client)
-            REPE._stop_server(server)
+            REPE.stop(server)
         end
     end
 end

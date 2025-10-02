@@ -8,7 +8,6 @@ using Sockets
     include("test_beve.jl")
     include("test_client_server_simple.jl")
     include("test_concurrent_simple.jl")
-    # Commenting out network tests for now - they have timing issues
-    # include("test_client_server.jl")
-    # include("test_concurrent.jl")  # Full concurrent tests with servers
+    include("test_client_server.jl")
+    include("test_concurrent.jl")
 end

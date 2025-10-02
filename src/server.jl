@@ -11,6 +11,26 @@ mutable struct Server
     end
 end
 
+function _resolve_listen_address(host::String)
+    normalized = strip(host)
+
+    if isempty(normalized) || normalized == "*" || normalized == "0.0.0.0"
+        return Sockets.IPv4(0)
+    elseif normalized == "::"
+        return Sockets.IPv6(0)
+    end
+
+    for family in (Sockets.IPv4, Sockets.IPv6)
+        try
+            return Sockets.getaddrinfo(normalized, family)
+        catch
+            # Try the next family
+        end
+    end
+
+    error(ErrorException("Failed to resolve listen address for host $host"))
+end
+
 function register(server::Server, method::String, handler::Function)
     server.handlers[method] = handler
 end
@@ -24,7 +44,8 @@ function _start_server(server::Server)
         return
     end
     
-    server.server = Sockets.listen(Sockets.IPv4(0), server.port)
+    listen_addr = _resolve_listen_address(server.host)
+    server.server = Sockets.listen(listen_addr, server.port)
     server.running = true
     
     @info "REPE Server listening on $(server.host):$(server.port)"
@@ -160,6 +181,24 @@ function listen(server::Server; async::Bool = false)
     end
 end
 
+function wait_for_server(host::String, port::Int; attempts::Int = 50, delay::Float64 = 0.1)
+    for _ in 1:attempts
+        try
+            sock = _connect_socket(host, port)
+            close(sock)
+            return
+        catch e
+            if isa(e, Base.IOError) || isa(e, Base.UVError)
+                sleep(delay)
+            else
+                rethrow(e)
+            end
+        end
+    end
+
+    error(ErrorException("Server failed to start on $host:$port"))
+end
+
 # Pretty printing for REPL
 function Base.show(io::IO, server::Server)
     status = server.running ? "running" : "stopped"
@@ -167,4 +206,3 @@ function Base.show(io::IO, server::Server)
     handler_text = n_handlers == 1 ? "1 handler" : "$n_handlers handlers"
     print(io, "Server(\"$(server.host):$(server.port)\", $status, $handler_text)")
 end
-
