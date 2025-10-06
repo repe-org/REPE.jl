@@ -200,7 +200,8 @@ function _send_request_sync(client::Client, method::String, params = nothing;
         timeout_val = something(timeout, client.timeout)
         
         # Wait for response with timeout
-        response = timedwait(timeout_val) do
+        poll_interval = 0.001
+        response = timedwait(timeout_val; pollint=poll_interval) do
             isready(response_channel)
         end
         
