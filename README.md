@@ -109,8 +109,6 @@ REPE messages consist of a fixed 48-byte header followed by optional query and b
 - `REPE.JSON` (2): JSON data
 - `REPE.UTF8` (3): UTF-8 text
 
-Note: The underlying protocol constants are `BODY_RAW_BINARY`, `BODY_BEVE`, `BODY_JSON`, and `BODY_UTF8`, but the convenient aliases above are recommended for use in your code.
-
 ## Error Codes
 
 Standard REPE error codes (0-4095 reserved):

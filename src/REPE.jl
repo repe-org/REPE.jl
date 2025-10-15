@@ -1,9 +1,13 @@
 module REPE
 
 using Sockets
-using JSON3
-using StructTypes
 import BEVE as BEVEModule
+
+module JSONInternal
+using JSON
+end
+
+const JSONLib = JSONInternal.JSON
 
 export Header, Message, Client, Server
 export ErrorCode, QueryFormat, BodyFormat

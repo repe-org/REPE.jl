@@ -34,7 +34,7 @@ function Message(;
     else
         # Handle other types - encode based on format
         if body_format == UInt16(BODY_JSON)
-            json_str = JSON3.write(body)
+            json_str = JSONLib.json(body)
             body_bytes = Vector{UInt8}(json_str)
         elseif body_format == UInt16(BODY_BEVE)
             body_bytes = BEVEModule.to_beve(body)
@@ -115,7 +115,7 @@ end
 
 function parse_body(msg::Message)
     if msg.header.body_format == UInt16(BODY_JSON)
-        return JSON3.read(msg.body)
+        return JSONLib.parse(String(msg.body))
     elseif msg.header.body_format == UInt16(BODY_BEVE)
         return BEVEModule.from_beve(msg.body)
     elseif msg.header.body_format == UInt16(BODY_UTF8)
@@ -129,7 +129,7 @@ end
 
 function encode_body(data, format::BodyFormat)::Vector{UInt8}
     if format == BODY_JSON
-        json_str = JSON3.write(data)
+        json_str = JSONLib.json(data)
         return Vector{UInt8}(json_str)
     elseif format == BODY_BEVE
         return BEVEModule.to_beve(data)
