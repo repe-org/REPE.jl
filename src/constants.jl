@@ -39,7 +39,6 @@ const ERROR_MESSAGES = Dict{ErrorCode, String}(
     EC_TIMEOUT => "Timeout"
 )
 
-# Convenience aliases for body formats
 const JSON = BODY_JSON
 const BEVE = BODY_BEVE
 const UTF8 = BODY_UTF8
