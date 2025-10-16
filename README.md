@@ -39,6 +39,9 @@ using REPE
 # Create server
 server = Server("localhost", 8080)
 
+# Enable stack traces for easier debugging (optional)
+# server = Server("localhost", 8080; print_stacktrace=true)
+
 # Register handlers
 REPE.register(server, "/api/add", function(params, request)
     return Dict("result" => params["a"] + params["b"])
@@ -53,6 +56,8 @@ listen(server; async=true)
 # Stop the server when done
 stop(server)
 ```
+
+Pass `print_stacktrace=true` when constructing the server if you want REPE to log stack traces alongside the standard error messages while you are debugging.
 
 ### Client Example
 
