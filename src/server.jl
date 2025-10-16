@@ -127,8 +127,7 @@ function _handle_client(server::Server, client::TCPSocket)
         end
     catch e
         @error "Error handling client" exception = e
-        # print_stacktrace(e)
-        rethrow(e)
+        print_stacktrace(e)
     finally
         close(client)
         @info "Client disconnected"
