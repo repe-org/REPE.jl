@@ -16,9 +16,10 @@ mutable struct Server
     running::Bool
     handlers::Dict{String,Function}
     middleware::Vector{Function}
+    print_stacktrace::Bool
 
-    function Server(host::String="localhost", port::Int=8080)
-        new(host, port, nothing, false, Dict{String,Function}(), Function[])
+    function Server(host::String="localhost", port::Int=8080; print_stacktrace::Bool=false)
+        new(host, port, nothing, false, Dict{String,Function}(), Function[], print_stacktrace)
     end
 end
 
@@ -127,7 +128,9 @@ function _handle_client(server::Server, client::TCPSocket)
         end
     catch e
         @error "Error handling client" exception = e
-        print_stacktrace(e)
+        if server.print_stacktrace
+            print_stacktrace(e)
+        end
     finally
         close(client)
         @info "Client disconnected"
@@ -168,7 +171,9 @@ function _process_request(server::Server, request::Message)::Message
 
     catch e
         @error "Error processing request" exception = e
-        print_stacktrace(e)
+        if server.print_stacktrace
+            print_stacktrace(e)
+        end
         return _create_error_response(request, EC_PARSE_ERROR, string(e))
     end
 end
