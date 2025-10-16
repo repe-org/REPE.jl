@@ -15,13 +15,13 @@ struct Message
 end
 
 function Message(;
-    id::Union{UInt64,Int}=0,
-    query::Union{String,Vector{UInt8}}=UInt8[],
-    body::Any=nothing,
-    query_format::Union{UInt16,Int}=UInt16(QUERY_RAW_BINARY),
-    body_format::Union{UInt16,Int}=UInt16(BODY_RAW_BINARY),
-    notify::Bool=false,
-    ec::Union{UInt32,Int}=UInt32(EC_OK)
+    id::Union{UInt64, Int} = 0,
+    query::Union{String, Vector{UInt8}} = UInt8[],
+    body::Any = nothing,
+    query_format::Union{UInt16, Int} = UInt16(QUERY_RAW_BINARY),
+    body_format::Union{UInt16, Int} = UInt16(BODY_RAW_BINARY),
+    notify::Bool = false,
+    ec::Union{UInt32, Int} = UInt32(EC_OK)
 )
     query_bytes = query isa String ? Vector{UInt8}(query) : query
 
@@ -48,14 +48,14 @@ function Message(;
     total_length = HEADER_SIZE + query_length + body_length
 
     header = Header(
-        length=total_length,
-        id=UInt64(id),
-        query_length=query_length,
-        body_length=body_length,
-        query_format=UInt16(query_format),
-        body_format=UInt16(body_format),
-        notify=notify ? 0x01 : 0x00,
-        ec=UInt32(ec)
+        length = total_length,
+        id = UInt64(id),
+        query_length = query_length,
+        body_length = body_length,
+        query_format = UInt16(query_format),
+        body_format = UInt16(body_format),
+        notify = notify ? 0x01 : 0x00,
+        ec = UInt32(ec)
     )
 
     return Message(header, query_bytes, body_bytes)
@@ -154,26 +154,26 @@ function encode_body(data, format::BodyFormat)::Vector{UInt8}
     end
 end
 
-function create_error_message(ec::ErrorCode, msg::String="")::Message
+function create_error_message(ec::ErrorCode, msg::String = "")::Message
     error_msg = isempty(msg) ? get(ERROR_MESSAGES, ec, "Unknown error") : msg
 
     return Message(
-        query="",
-        body=error_msg,
-        body_format=UInt16(BODY_UTF8),
-        ec=UInt32(ec)
+        query = "",
+        body = error_msg,
+        body_format = UInt16(BODY_UTF8),
+        ec = UInt32(ec)
     )
 end
 
-function create_response(request::Message, result; body_format::BodyFormat=BODY_JSON)::Message
+function create_response(request::Message, result; body_format::BodyFormat = BODY_JSON)::Message
     body_bytes = encode_body(result, body_format)
 
     return Message(
-        id=request.header.id,
-        query=request.query,
-        body=body_bytes,
-        query_format=request.header.query_format,
-        body_format=UInt16(body_format),
-        ec=UInt32(EC_OK)
+        id = request.header.id,
+        query = request.query,
+        body = body_bytes,
+        query_format = request.header.query_format,
+        body_format = UInt16(body_format),
+        ec = UInt32(EC_OK)
     )
 end
