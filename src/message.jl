@@ -2,7 +2,7 @@ struct Message
     header::Header
     query::Vector{UInt8}
     body::Vector{UInt8}
-
+    
     function Message(header::Header, query::Vector{UInt8}, body::Vector{UInt8})
         if length(query) != header.query_length
             throw(ArgumentError("Query length mismatch"))
@@ -24,7 +24,7 @@ function Message(;
     ec::Union{UInt32, Int} = UInt32(EC_OK)
 )
     query_bytes = query isa String ? Vector{UInt8}(query) : query
-
+    
     if body === nothing
         body_bytes = UInt8[]
     elseif body isa String
@@ -42,11 +42,11 @@ function Message(;
             body_bytes = Vector{UInt8}(string(body))
         end
     end
-
+    
     query_length = UInt64(length(query_bytes))
     body_length = UInt64(length(body_bytes))
     total_length = HEADER_SIZE + query_length + body_length
-
+    
     header = Header(
         length = total_length,
         id = UInt64(id),
@@ -57,28 +57,28 @@ function Message(;
         notify = notify ? 0x01 : 0x00,
         ec = UInt32(ec)
     )
-
+    
     return Message(header, query_bytes, body_bytes)
 end
 
 function serialize_message(msg::Message)::Vector{UInt8}
     header_bytes = serialize_header(msg.header)
-
+    
     total_size = HEADER_SIZE + length(msg.query) + length(msg.body)
     buffer = Vector{UInt8}(undef, total_size)
-
+    
     buffer[1:HEADER_SIZE] = header_bytes
-
+    
     offset = HEADER_SIZE + 1
     if !isempty(msg.query)
         buffer[offset:offset+length(msg.query)-1] = msg.query
         offset += length(msg.query)
     end
-
+    
     if !isempty(msg.body)
         buffer[offset:offset+length(msg.body)-1] = msg.body
     end
-
+    
     return buffer
 end
 
@@ -86,20 +86,20 @@ function deserialize_message(buffer::Vector{UInt8})::Message
     if length(buffer) < HEADER_SIZE
         throw(ArgumentError("Buffer too small for REPE message"))
     end
-
+    
     header = deserialize_header(buffer[1:HEADER_SIZE])
-
+    
     expected_size = HEADER_SIZE + header.query_length + header.body_length
     if length(buffer) < expected_size
         throw(ArgumentError("Buffer too small: expected $expected_size, got $(length(buffer))"))
     end
-
+    
     offset = HEADER_SIZE + 1
     query = buffer[offset:offset+header.query_length-1]
-
+    
     offset += header.query_length
     body = buffer[offset:offset+header.body_length-1]
-
+    
     return Message(header, query, body)
 end
 
@@ -156,7 +156,7 @@ end
 
 function create_error_message(ec::ErrorCode, msg::String = "")::Message
     error_msg = isempty(msg) ? get(ERROR_MESSAGES, ec, "Unknown error") : msg
-
+    
     return Message(
         query = "",
         body = error_msg,
@@ -167,7 +167,7 @@ end
 
 function create_response(request::Message, result; body_format::BodyFormat = BODY_JSON)::Message
     body_bytes = encode_body(result, body_format)
-
+    
     return Message(
         id = request.header.id,
         query = request.query,
