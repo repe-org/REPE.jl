@@ -115,11 +115,7 @@ end
 
 function parse_body(msg::Message)
     if msg.header.body_format == UInt16(BODY_JSON)
-        try
-            return JSONLib.parse(msg.body)
-        catch
-            println(String(msg.body))
-        end
+        return JSONLib.parse(msg.body)
     elseif msg.header.body_format == UInt16(BODY_BEVE)
         return BEVEModule.from_beve(msg.body)
     elseif msg.header.body_format == UInt16(BODY_UTF8)
