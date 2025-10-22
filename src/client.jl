@@ -1,3 +1,8 @@
+struct PendingRequest
+    channel::Channel
+    result_type::Union{Nothing, Type}
+end
+
 mutable struct Client
     socket::TCPSocket
     host::String
@@ -5,7 +10,7 @@ mutable struct Client
     connected::Bool
     timeout::Float64
     next_id::Threads.Atomic{UInt64}
-    pending_requests::Dict{UInt64, Channel}
+    pending_requests::Dict{UInt64, PendingRequest}
     
     # Synchronization primitives
     state_lock::ReentrantLock        # Protects connected and socket
@@ -15,7 +20,7 @@ mutable struct Client
     function Client(host::String = "localhost", port::Int = 8080; timeout::Float64 = 30.0)
         new(TCPSocket(), host, port, false, timeout, 
             Threads.Atomic{UInt64}(1), 
-            Dict{UInt64, Channel}(),
+            Dict{UInt64, PendingRequest}(),
             ReentrantLock(),
             ReentrantLock(),
             ReentrantLock())
@@ -103,8 +108,8 @@ function disconnect(client::Client)
             
             # Clean up pending requests
             lock(client.requests_lock) do
-                for (_, ch) in client.pending_requests
-                    close(ch)
+                for pending in values(client.pending_requests)
+                    close(pending.channel)
                 end
                 empty!(client.pending_requests)
             end
@@ -155,13 +160,15 @@ end
 function send_request_async(client::Client, method::String, params = nothing; 
                            query_format::QueryFormat = QUERY_JSON_POINTER,
                            body_format::BodyFormat = BODY_JSON,
-                           timeout::Union{Float64, Nothing} = nothing)
+                           timeout::Union{Float64, Nothing} = nothing,
+                           result_type::Union{Nothing, Type} = nothing)
     
     return @async begin
         _send_request_sync(client, method, params; 
                          query_format=query_format, 
                          body_format=body_format, 
-                         timeout=timeout)
+                         timeout=timeout,
+                         result_type=result_type)
     end
 end
 
@@ -169,7 +176,8 @@ end
 function _send_request_sync(client::Client, method::String, params = nothing; 
                           query_format::QueryFormat = QUERY_JSON_POINTER,
                           body_format::BodyFormat = BODY_JSON,
-                          timeout::Union{Float64, Nothing} = nothing)
+                          timeout::Union{Float64, Nothing} = nothing,
+                          result_type::Union{Nothing, Type} = nothing)
     
     if !client.connected
         connect(client)
@@ -180,7 +188,7 @@ function _send_request_sync(client::Client, method::String, params = nothing;
     
     # Register the pending request
     lock(client.requests_lock) do
-        client.pending_requests[request_id] = response_channel
+        client.pending_requests[request_id] = PendingRequest(response_channel, result_type)
     end
     
     body_bytes = params === nothing ? UInt8[] : encode_body(params, body_format)
@@ -241,12 +249,38 @@ end
 function send_request(client::Client, method::String, params = nothing; 
                      query_format::QueryFormat = QUERY_JSON_POINTER,
                      body_format::BodyFormat = BODY_JSON,
-                     timeout::Union{Float64, Nothing} = nothing)
+                     timeout::Union{Float64, Nothing} = nothing,
+                     result_type::Union{Nothing, Type} = nothing)
     
     return _send_request_sync(client, method, params; 
                             query_format=query_format, 
                             body_format=body_format, 
-                            timeout=timeout)
+                            timeout=timeout,
+                            result_type=result_type)
+end
+
+function send_request(::Type{T}, client::Client, method::String, params = nothing; 
+                     query_format::QueryFormat = QUERY_JSON_POINTER,
+                     body_format::BodyFormat = BODY_JSON,
+                     timeout::Union{Float64, Nothing} = nothing) where {T}
+    
+    return _send_request_sync(client, method, params; 
+                            query_format=query_format, 
+                            body_format=body_format, 
+                            timeout=timeout,
+                            result_type=T)
+end
+
+function send_request_async(::Type{T}, client::Client, method::String, params = nothing; 
+                           query_format::QueryFormat = QUERY_JSON_POINTER,
+                           body_format::BodyFormat = BODY_JSON,
+                           timeout::Union{Float64, Nothing} = nothing) where {T}
+    
+    return send_request_async(client, method, params; 
+                             query_format=query_format, 
+                             body_format=body_format, 
+                             timeout=timeout,
+                             result_type=T)
 end
 
 function _handle_responses(client::Client)
@@ -289,14 +323,21 @@ function _handle_responses(client::Client)
             # Find and notify the waiting request
             lock(client.requests_lock) do
                 if haskey(client.pending_requests, msg.header.id)
-                    ch = client.pending_requests[msg.header.id]
+                    pending = client.pending_requests[msg.header.id]
+                    ch = pending.channel
                     
                     if msg.header.ec != UInt32(EC_OK)
                         error_msg = isempty(msg.body) ? "Unknown error" : String(msg.body)
                         put!(ch, ErrorException("RPC Error ($(msg.header.ec)): $error_msg"))
                     else
-                        result = parse_body(msg)
-                        put!(ch, result)
+                        try
+                            result = pending.result_type === nothing ? 
+                                parse_body(msg) : 
+                                parse_body(msg, pending.result_type)
+                            put!(ch, result)
+                        catch parse_err
+                            put!(ch, parse_err)
+                        end
                     end
                 end
             end

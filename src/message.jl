@@ -127,6 +127,17 @@ function parse_body(msg::Message)
     end
 end
 
+function parse_body(msg::Message, ::Type{T}) where T
+    format = msg.header.body_format
+    if format == UInt16(BODY_JSON)
+        return JSONLib.parse(msg.body, T)
+    elseif format == UInt16(BODY_BEVE)
+        return BEVEModule.deser_beve(T, msg.body)
+    else
+        throw(ArgumentError("Cannot parse body as $T with body format $format"))
+    end
+end
+
 function encode_body(data, format::BodyFormat)::Vector{UInt8}
     if format == BODY_JSON
         json_str = JSONLib.json(data)

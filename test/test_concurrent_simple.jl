@@ -46,7 +46,7 @@
                 
                 # Add to pending requests
                 lock(client.requests_lock) do
-                    client.pending_requests[id] = ch
+                    client.pending_requests[id] = REPE.PendingRequest(ch, nothing)
                 end
                 
                 # Remove from pending requests

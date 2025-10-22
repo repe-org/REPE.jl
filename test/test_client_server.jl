@@ -127,4 +127,58 @@
             REPE.stop(server)
         end
     end
+
+    @testset "Typed Responses" begin
+        struct TypedResponse
+            answer::Int
+            message::String
+        end
+
+        port = 9005
+        server = REPE.Server("localhost", port)
+
+        REPE.register(server, "/typed", function(params, request)
+            return Dict("answer" => 42, "message" => "life")
+        end)
+
+        REPE.register(server, "/typed_beve", function(params, request)
+            result = Dict("answer" => 24, "message" => "beve")
+            return REPE.create_response(request, result; body_format = REPE.BODY_BEVE)
+        end)
+
+        REPE.listen(server; async=true)
+        REPE.wait_for_server(server.host, port)
+
+        client = REPE.Client("localhost", port)
+        REPE.connect(client)
+
+        try
+            typed_result = REPE.send_request(TypedResponse, client, "/typed", Dict())
+            @test typed_result isa TypedResponse
+            @test typed_result.answer == 42
+            @test typed_result.message == "life"
+
+            keyword_result = REPE.send_request(client, "/typed", Dict(); result_type=TypedResponse)
+            @test keyword_result isa TypedResponse
+
+            task_json = REPE.send_request_async(TypedResponse, client, "/typed", Dict())
+            async_json_result = fetch(task_json)
+            @test async_json_result isa TypedResponse
+
+            beve_result = REPE.send_request(TypedResponse, client, "/typed_beve", Dict())
+            @test beve_result isa TypedResponse
+            @test beve_result.answer == 24
+            @test beve_result.message == "beve"
+
+            beve_keyword = REPE.send_request(client, "/typed_beve", Dict(); result_type = TypedResponse)
+            @test beve_keyword isa TypedResponse
+
+            task_beve = REPE.send_request_async(client, "/typed_beve", Dict(); result_type = TypedResponse)
+            async_beve_result = fetch(task_beve)
+            @test async_beve_result isa TypedResponse
+        finally
+            REPE.disconnect(client)
+            REPE.stop(server)
+        end
+    end
 end
