@@ -78,6 +78,39 @@ send_notify(client, "/api/log", "Event occurred")
 disconnect(client)
 ```
 
+### Typed Responses
+
+REPE can decode JSON or BEVE responses directly into Julia structs. Define standard Julia structs for your payloads and pass the type (or a `result_type` keyword) when calling `send_request` or `send_request_async`.
+
+```julia
+using REPE
+
+struct SensorReading
+    id::Int
+    status::String
+end
+
+client = Client("localhost", 8080)
+connect(client)
+
+# JSON response decoded straight into SensorReading
+reading = send_request(SensorReading, client, "/api/sensor", Dict("id" => 42))
+@assert reading isa SensorReading
+
+# Keyword form is also available
+reading2 = send_request(client, "/api/sensor", Dict("id" => 42);
+                        result_type = SensorReading)
+
+# Async variant
+task = send_request_async(SensorReading, client, "/api/sensor", Dict("id" => 42))
+reading3 = fetch(task)
+
+# BEVE responses are supported automatically by the typed API
+reading_beve = send_request(SensorReading, client, "/api/sensor/beve", Dict())
+
+disconnect(client)
+```
+
 ## Protocol Specification
 
 For the complete protocol specification, see the [official REPE documentation](https://github.com/repe-org/REPE).
