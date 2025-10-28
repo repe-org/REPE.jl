@@ -11,11 +11,10 @@ jobs:
   test:
     name: Julia ${{ matrix.version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
       fail-fast: false
       matrix:
-        version: ['1.10', 'nightly']
+        version: ['1.10']
         os: [ubuntu-latest]
         arch: [x64]
 
