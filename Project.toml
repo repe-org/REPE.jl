@@ -1,7 +1,7 @@
 name = "REPE"
 uuid = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 authors = ["Stephen Berry"]
-version = "0.3.0"
+version = "0.4.0"
 
 [deps]
 BEVE = "e4b2c2d1-1234-5678-9abc-123456789abc"
