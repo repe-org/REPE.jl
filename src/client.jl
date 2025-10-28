@@ -11,16 +11,18 @@ mutable struct Client
     timeout::Float64
     next_id::Threads.Atomic{UInt64}
     pending_requests::Dict{UInt64, PendingRequest}
+    nodelay::Bool
     
     # Synchronization primitives
     state_lock::ReentrantLock        # Protects connected and socket
     requests_lock::ReentrantLock     # Protects pending_requests
     write_lock::ReentrantLock        # Protects socket writes
     
-    function Client(host::String = "localhost", port::Int = 8080; timeout::Float64 = 30.0)
+    function Client(host::String = "localhost", port::Int = 8080; timeout::Float64 = 30.0, nodelay::Bool = true)
         new(TCPSocket(), host, port, false, timeout, 
             Threads.Atomic{UInt64}(1), 
             Dict{UInt64, PendingRequest}(),
+            nodelay,
             ReentrantLock(),
             ReentrantLock(),
             ReentrantLock())
@@ -82,6 +84,7 @@ function connect(client::Client)
 
         try
             client.socket = _connect_socket(client.host, client.port)
+            Sockets.nodelay!(client.socket, client.nodelay)
             client.connected = true
             
             # Start the response handler
@@ -93,6 +96,16 @@ function connect(client::Client)
             rethrow(e)
         end
     end
+end
+
+function set_nodelay!(client::Client, enabled::Bool)
+    lock(client.state_lock) do
+        client.nodelay = enabled
+        if client.connected
+            Sockets.nodelay!(client.socket, enabled)
+        end
+    end
+    return client
 end
 
 function disconnect(client::Client)

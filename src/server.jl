@@ -17,9 +17,10 @@ mutable struct Server
     handlers::Dict{String,Function}
     middleware::Vector{Function}
     print_stacktrace::Bool
+    nodelay::Bool
 
-    function Server(host::String="localhost", port::Int=8080; print_stacktrace::Bool=false)
-        new(host, port, nothing, false, Dict{String,Function}(), Function[], print_stacktrace)
+    function Server(host::String="localhost", port::Int=8080; print_stacktrace::Bool=false, nodelay::Bool=true)
+        new(host, port, nothing, false, Dict{String,Function}(), Function[], print_stacktrace, nodelay)
     end
 end
 
@@ -68,6 +69,7 @@ function _start_server(server::Server)
     while server.running
         try
             client = accept(server.server)
+            Sockets.nodelay!(client, server.nodelay)
             @async _handle_client(server, client)
         catch e
             if server.running
@@ -176,6 +178,11 @@ function _process_request(server::Server, request::Message)::Message
         end
         return _create_error_response(request, EC_PARSE_ERROR, string(e))
     end
+end
+
+function set_nodelay!(server::Server, enabled::Bool)
+    server.nodelay = enabled
+    return server
 end
 
 function _create_error_response(request::Message, ec::ErrorCode, msg::String="")::Message

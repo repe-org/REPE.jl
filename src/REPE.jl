@@ -17,6 +17,7 @@ export batch, await_batch
 export connect, disconnect, listen, stop, isconnected, wait_for_server
 export serialize_message, deserialize_message
 export parse_query, parse_body, encode_body
+export set_nodelay!
 
 include("constants.jl")
 include("header.jl")
