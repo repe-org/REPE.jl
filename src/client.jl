@@ -84,7 +84,7 @@ function connect(client::Client)
 
         try
             client.socket = _connect_socket(client.host, client.port)
-            Sockets.nodelay!(client.socket, client.nodelay)
+            Sockets.nagle(client.socket, !client.nodelay)
             client.connected = true
             
             # Start the response handler
@@ -102,7 +102,7 @@ function set_nodelay!(client::Client, enabled::Bool)
     lock(client.state_lock) do
         client.nodelay = enabled
         if client.connected
-            Sockets.nodelay!(client.socket, enabled)
+            Sockets.nagle(client.socket, !enabled)
         end
     end
     return client

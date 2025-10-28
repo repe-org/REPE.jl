@@ -69,7 +69,7 @@ function _start_server(server::Server)
     while server.running
         try
             client = accept(server.server)
-            Sockets.nodelay!(client, server.nodelay)
+            Sockets.nagle(client, !server.nodelay)
             @async _handle_client(server, client)
         catch e
             if server.running
