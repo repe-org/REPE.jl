@@ -17,7 +17,9 @@ export batch, await_batch
 export connect, disconnect, listen, stop, isconnected, wait_for_server
 export serialize_message, deserialize_message
 export parse_query, parse_body, encode_body
-export set_nodelay!
+export set_nodelay!, register
+export HEADER_SIZE, QUERY_JSON_POINTER, BODY_JSON, BODY_BEVE, BODY_UTF8
+export UniUDPClient, UniUDPServer
 
 include("constants.jl")
 include("header.jl")
@@ -25,5 +27,9 @@ include("message.jl")
 include("client.jl")
 include("server.jl")
 include("errors.jl")
+
+# Placeholders for UniUDP extension types - populated by UniUDPExt when loaded
+global UniUDPClient = nothing
+global UniUDPServer = nothing
 
 end

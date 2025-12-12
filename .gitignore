@@ -1,3 +1,4 @@
 /cpp_server/build
 /.julia
 Manifest.toml
+.DS_Store
