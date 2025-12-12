@@ -1,11 +1,11 @@
 struct Message
     header::Header
-    query::Vector{UInt8}
+    query::String
     body::Vector{UInt8}
 
-    function Message(header::Header, query::Vector{UInt8}, body::Vector{UInt8})
-        if length(query) != header.query_length
-            throw(ArgumentError("Query length mismatch"))
+    function Message(header::Header, query::String, body::Vector{UInt8})
+        if sizeof(query) != header.query_length
+            throw(ArgumentError("Query length mismatch: expected $(header.query_length), got $(sizeof(query))"))
         end
         if length(body) != header.body_length
             throw(ArgumentError("Body length mismatch"))
@@ -16,15 +16,13 @@ end
 
 function Message(;
     id::Union{UInt64,Int}=0,
-    query::Union{String,Vector{UInt8}}=UInt8[],
+    query::String="",
     body::Any=nothing,
     query_format::Union{UInt16,Int}=UInt16(QUERY_RAW_BINARY),
     body_format::Union{UInt16,Int}=UInt16(BODY_RAW_BINARY),
     notify::Bool=false,
     ec::Union{UInt32,Int}=UInt32(EC_OK)
 )
-    query_bytes = query isa String ? Vector{UInt8}(query) : query
-
     if body === nothing
         body_bytes = UInt8[]
     elseif body isa String
@@ -43,7 +41,7 @@ function Message(;
         end
     end
 
-    query_length = UInt64(length(query_bytes))
+    query_length = UInt64(sizeof(query))
     body_length = UInt64(length(body_bytes))
     total_length = HEADER_SIZE + query_length + body_length
 
@@ -58,21 +56,22 @@ function Message(;
         ec=UInt32(ec)
     )
 
-    return Message(header, query_bytes, body_bytes)
+    return Message(header, query, body_bytes)
 end
 
 function serialize_message(msg::Message)::Vector{UInt8}
     header_bytes = serialize_header(msg.header)
 
-    total_size = HEADER_SIZE + length(msg.query) + length(msg.body)
+    query_bytes = Vector{UInt8}(msg.query)
+    total_size = HEADER_SIZE + length(query_bytes) + length(msg.body)
     buffer = Vector{UInt8}(undef, total_size)
 
     buffer[1:HEADER_SIZE] = header_bytes
 
     offset = HEADER_SIZE + 1
-    if !isempty(msg.query)
-        buffer[offset:offset+length(msg.query)-1] = msg.query
-        offset += length(msg.query)
+    if !isempty(query_bytes)
+        buffer[offset:offset+length(query_bytes)-1] = query_bytes
+        offset += length(query_bytes)
     end
 
     if !isempty(msg.body)
@@ -95,7 +94,8 @@ function deserialize_message(buffer::Vector{UInt8})::Message
     end
 
     offset = HEADER_SIZE + 1
-    query = buffer[offset:offset+header.query_length-1]
+    query_bytes = buffer[offset:offset+header.query_length-1]
+    query = String(query_bytes)
 
     offset += header.query_length
     body = buffer[offset:offset+header.body_length-1]
@@ -103,27 +103,28 @@ function deserialize_message(buffer::Vector{UInt8})::Message
     return Message(header, query, body)
 end
 
-function parse_query(msg::Message)::String
-    if msg.header.query_format == UInt16(QUERY_JSON_POINTER)
-        return String(msg.query)
-    elseif msg.header.query_format == UInt16(QUERY_RAW_BINARY)
-        return String(msg.query)
-    else
-        return String(msg.query)
-    end
-end
+"""
+    parse_query(msg::Message)::String
+
+Returns the query string from a message. Since query is stored as String,
+this simply returns it directly.
+"""
+parse_query(msg::Message)::String = msg.query
 
 function parse_body(msg::Message)
+    if isempty(msg.body)
+        return nothing
+    end
     if msg.header.body_format == UInt16(BODY_JSON)
         return JSONLib.parse(msg.body)
     elseif msg.header.body_format == UInt16(BODY_BEVE)
         return BEVEModule.from_beve(msg.body)
     elseif msg.header.body_format == UInt16(BODY_UTF8)
-        return String(msg.body)
+        return String(copy(msg.body))
     elseif msg.header.body_format == UInt16(BODY_RAW_BINARY)
-        return msg.body
+        return copy(msg.body)
     else
-        return msg.body
+        return copy(msg.body)
     end
 end
 

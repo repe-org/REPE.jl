@@ -10,8 +10,9 @@ Julia implementation of the [REPE (Remote Efficient Protocol Extension)](https:/
 - Asynchronous client/server architecture
 - Error handling with standardized error codes
 - Notification support (fire-and-forget messages)
+- **Registry support** for serving dictionaries with JSON Pointer syntax (Glaze-compatible)
 - Compatible with C++ Glaze implementation
-- Comprehensive test suite with 107+ unit tests
+- Comprehensive test suite with 230+ unit tests
 - Integration tested with Glaze C++ servers
 
 ## Requirements
@@ -244,6 +245,146 @@ if isconnected(client)
 end
 ```
 
+## Registry
+
+The `Registry` provides a convenient way to serve variables and functions using JSON Pointer syntax, matching the behavior of the Glaze C++ REPE registry. This allows you to expose a dictionary-like structure where:
+
+- **Empty body** = READ the value at the path
+- **Non-empty body + Function** = CALL the function with the body as arguments
+- **Non-empty body + non-Function** = WRITE the value to the path
+
+### Basic Registry Usage
+
+```julia
+using REPE
+
+# Create a registry with variables and functions
+registry = Registry(
+    "counter" => 0,
+    "config" => Dict("timeout" => 30, "retries" => 3),
+    "add" => (;a, b) -> a + b,           # kwargs-style function
+    "multiply" => (x, y) -> x * y         # positional args (use array body)
+)
+
+# Serve the registry
+server = Server("localhost", 8080)
+serve(server, registry)
+listen(server)
+```
+
+### Client Access
+
+```julia
+client = Client("localhost", 8080)
+connect(client)
+
+# READ a value (empty body)
+counter = send_request(client, "/counter", nothing)  # Returns: 0
+
+# READ nested value
+timeout = send_request(client, "/config/timeout", nothing)  # Returns: 30
+
+# WRITE a value (non-empty body to non-function)
+send_request(client, "/counter", 42)  # Sets counter to 42
+
+# CALL a function with kwargs (dict body)
+result = send_request(client, "/add", Dict("a" => 10, "b" => 20))  # Returns: 30
+
+# CALL a function with positional args (array body)
+result = send_request(client, "/multiply", [4, 7])  # Returns: 28
+
+disconnect(client)
+```
+
+### Building a Registry
+
+```julia
+# Create empty and add entries
+registry = Registry()
+registry["version"] = "1.0.0"
+registry["debug"] = false
+
+# Register at a path (creates nested structure)
+register!(registry, "api/users/count", 0)
+
+# Merge a dictionary at root
+merge!(registry, Dict(
+    "status" => "online",
+    "uptime" => () -> time()
+))
+
+# Merge a dictionary at a specific path
+merge!(registry, "/api/v2", Dict(
+    "users" => Dict(
+        "list" => () -> get_all_users(),
+        "create" => (;name, email) -> create_user(name, email)
+    ),
+    "posts" => Dict(
+        "list" => () -> get_all_posts(),
+        "create" => (;title, body) -> create_post(title, body)
+    )
+))
+# Now accessible as /api/v2/users/list, /api/v2/posts/create, etc.
+```
+
+### JSON Pointer Support
+
+The registry uses [JSON Pointer (RFC 6901)](https://datatracker.ietf.org/doc/html/rfc6901) syntax for paths:
+
+```julia
+data = Dict(
+    "users" => [
+        Dict("name" => "Alice", "age" => 30),
+        Dict("name" => "Bob", "age" => 25)
+    ],
+    "config" => Dict("timeout" => 30)
+)
+registry = Registry(data)
+
+# Access nested values
+resolve_json_pointer(registry, "/users/0/name")      # "Alice" (0-based array index)
+resolve_json_pointer(registry, "/config/timeout")    # 30
+
+# Set values
+set_json_pointer!(registry, "/config/timeout", 60)
+```
+
+### Function Invocation
+
+Functions in the registry are called based on how the body is structured:
+
+| Body Type | Invocation Style | Example |
+|-----------|------------------|---------|
+| `Dict` | Keyword arguments | `(;a, b) -> a + b` called with `{"a": 5, "b": 3}` |
+| `Array` | Positional arguments | `(x, y) -> x * y` called with `[4, 7]` |
+| Empty `Dict`/`nothing` | No arguments | `() -> get_status()` |
+
+```julia
+registry = Registry(
+    # Keyword args function
+    "greet" => (;name, greeting="Hello") -> "$greeting, $name!",
+
+    # Positional args function
+    "sum" => (args...) -> sum(args),
+
+    # No-arg function
+    "timestamp" => () -> time()
+)
+```
+
+### Path Prefix
+
+Use `path_prefix` in `serve()` to strip a prefix from incoming requests:
+
+```julia
+registry = Registry("users" => [...], "posts" => [...])
+server = Server("localhost", 8080)
+serve(server, registry; path_prefix="/api/v1")
+listen(server)
+
+# Client requests /api/v1/users -> resolves to /users in registry
+```
+
 ## Glaze C++ Interoperability
 
 REPE.jl is fully compatible with the C++ Glaze implementation. You can build and run a C++ REPE server using Glaze:
@@ -371,13 +512,14 @@ See `examples/beve_demo.jl` for comprehensive BEVE examples and performance comp
 julia --project=. -e 'using Pkg; Pkg.test()'
 ```
 
-All 107 unit tests should pass, covering:
+All 230+ unit tests should pass, covering:
 - Header serialization/deserialization
 - Message encoding/decoding (JSON, UTF8, BEVE, binary)
 - Client-server communication
-- Concurrent/async operations  
+- Concurrent/async operations
 - Error handling
 - BEVE binary format support
+- Registry with JSON Pointer resolution
 
 ### Run C++ Integration Tests
 
