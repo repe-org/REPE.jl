@@ -30,6 +30,10 @@ jobs:
       - name: Cache Julia artifacts
         uses: julia-actions/cache@v2
 
+      - name: Add BEVE package from GitHub
+        run: |
+          julia -e 'using Pkg; Pkg.add(url="https://github.com/beve-org/BEVE.jl")'
+
       - name: Install dependencies
         uses: julia-actions/julia-buildpkg@v1
 
