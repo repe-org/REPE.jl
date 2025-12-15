@@ -1,9 +1,8 @@
 using Test
 using REPE
-using UniUDP
 using Sockets
 
-import REPE: listen
+import REPE: listen, register
 
 @testset "UniUDP Integration" begin
 

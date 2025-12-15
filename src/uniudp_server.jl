@@ -1,169 +1,4 @@
-module UniUDPExt
-
-using REPE
-using UniUDP
-using Sockets
-
-import REPE: parse_query, parse_body, encode_body, serialize_message, deserialize_message,
-             Message, QueryFormat, BodyFormat, QUERY_JSON_POINTER, BODY_JSON, EC_OK
-
-"""
-    UniUDPClient
-
-A REPE client that sends messages over UniUDP (unidirectional UDP).
-Supports both notifications (fire-and-forget) and requests (fire-and-forget,
-since no response path exists over one-way UDP).
-
-# Example
-```julia
-using REPE, UniUDP
-
-client = UniUDPClient(ip"192.168.1.100", 5000; redundancy=2)
-
-# Fire-and-forget notification
-send_notify(client, "/sensor/temperature", Dict("value" => 23.5))
-
-# Fire-and-forget request (server computes result but can't return it)
-send_request(client, "/compute/factorial", Dict("n" => 10))
-
-close(client)
-```
-"""
-struct UniUDPClient
-    socket::UDPSocket
-    target_host::Sockets.IPAddr
-    target_port::Int
-    redundancy::Int
-    chunk_size::Int
-    fec_group_size::Int
-    next_id::Threads.Atomic{UInt64}
-
-    function UniUDPClient(
-        host::Union{String, Sockets.IPAddr},
-        port::Int;
-        redundancy::Int = 1,
-        chunk_size::Int = 1024,
-        fec_group_size::Int = 1,
-        bind_addr::Sockets.IPAddr = ip"0.0.0.0",
-        bind_port::Int = 0
-    )
-        socket = UDPSocket()
-        bind(socket, bind_addr, bind_port)
-
-        target_host = host isa String ? Sockets.getaddrinfo(host) : host
-
-        new(socket, target_host, port, redundancy, chunk_size, fec_group_size,
-            Threads.Atomic{UInt64}(1))
-    end
-end
-
-function _get_next_id(client::UniUDPClient)::UInt64
-    return Threads.atomic_add!(client.next_id, UInt64(1))
-end
-
-function _send_message(client::UniUDPClient, msg::Message)
-    data = serialize_message(msg)
-    UniUDP.send_message(
-        client.socket,
-        client.target_host,
-        client.target_port,
-        data;
-        redundancy = client.redundancy,
-        chunk_size = client.chunk_size,
-        fec_group_size = client.fec_group_size
-    )
-end
-
-"""
-    send_notify(client::UniUDPClient, method::String, params=nothing; kwargs...)
-
-Send a fire-and-forget notification over UniUDP. No response is expected.
-
-# Arguments
-- `client`: The UniUDP client
-- `method`: The RPC method name (e.g., "/sensor/temperature")
-- `params`: Optional parameters to send (will be serialized according to body_format)
-- `query_format`: Format for the method name (default: QUERY_JSON_POINTER)
-- `body_format`: Format for serializing params (default: BODY_JSON)
-
-# Returns
-The REPE message ID used for the transmission.
-"""
-function REPE.send_notify(client::UniUDPClient, method::String, params=nothing;
-                          query_format::QueryFormat = QUERY_JSON_POINTER,
-                          body_format::BodyFormat = BODY_JSON)
-
-    body_bytes = params === nothing ? UInt8[] : encode_body(params, body_format)
-
-    msg = Message(
-        id = _get_next_id(client),
-        query = method,
-        body = body_bytes,
-        query_format = UInt16(query_format),
-        body_format = UInt16(body_format),
-        notify = true
-    )
-
-    _send_message(client, msg)
-    return msg.header.id
-end
-
-"""
-    send_request(client::UniUDPClient, method::String, params=nothing; kwargs...)
-
-Send a request over UniUDP. Since UDP is unidirectional, no response will be
-received. The server will process the request and invoke its response_callback
-with the computed result.
-
-This is useful when you want the server to perform a computation and handle
-the result locally (e.g., log it, store it, display it).
-
-# Arguments
-- `client`: The UniUDP client
-- `method`: The RPC method name (e.g., "/compute/factorial")
-- `params`: Optional parameters to send
-- `query_format`: Format for the method name (default: QUERY_JSON_POINTER)
-- `body_format`: Format for serializing params (default: BODY_JSON)
-
-# Returns
-The REPE message ID used for the transmission.
-"""
-function REPE.send_request(client::UniUDPClient, method::String, params=nothing;
-                           query_format::QueryFormat = QUERY_JSON_POINTER,
-                           body_format::BodyFormat = BODY_JSON)
-
-    body_bytes = params === nothing ? UInt8[] : encode_body(params, body_format)
-
-    msg = Message(
-        id = _get_next_id(client),
-        query = method,
-        body = body_bytes,
-        query_format = UInt16(query_format),
-        body_format = UInt16(body_format),
-        notify = false
-    )
-
-    _send_message(client, msg)
-    return msg.header.id
-end
-
-"""
-    close(client::UniUDPClient)
-
-Close the UDP socket associated with this client.
-"""
-function Base.close(client::UniUDPClient)
-    close(client.socket)
-end
-
-"""
-    isopen(client::UniUDPClient)
-
-Check if the client's socket is still open.
-"""
-function Base.isopen(client::UniUDPClient)
-    isopen(client.socket)
-end
+# UniUDP Server - REPE server over unidirectional UDP
 
 # Default response callback - does nothing
 _default_response_callback(method, result, msg) = nothing
@@ -178,7 +13,7 @@ over one-way UDP, computed results from requests are passed to a configurable
 
 # Example
 ```julia
-using REPE, UniUDP
+using REPE
 
 server = UniUDPServer(5000;
     response_callback = (method, result, msg) -> println("Result of \$method: \$result")
@@ -238,12 +73,12 @@ register(server, "/compute/double") do params, msg
 end
 ```
 """
-function REPE.register(server::UniUDPServer, method::String, handler::Function)
+function register(server::UniUDPServer, method::String, handler::Function)
     server.handlers[method] = handler
 end
 
 # Support do-block syntax
-function REPE.register(handler::Function, server::UniUDPServer, method::String)
+function register(handler::Function, server::UniUDPServer, method::String)
     server.handlers[method] = handler
 end
 
@@ -257,13 +92,13 @@ Otherwise blocks until `stop(server)` is called.
 """
 function serve(server::UniUDPServer; async::Bool=false)
     if async
-        @async _serve_loop(server)
+        @async _serve_uniudp_loop(server)
     else
-        _serve_loop(server)
+        _serve_uniudp_loop(server)
     end
 end
 
-function _serve_loop(server::UniUDPServer)
+function _serve_uniudp_loop(server::UniUDPServer)
     server.running[] = true
     @info "UniUDP REPE Server listening"
 
@@ -282,7 +117,7 @@ function _serve_loop(server::UniUDPServer)
             end
 
             # Check payload is large enough for REPE header
-            if length(report.payload) < REPE.HEADER_SIZE
+            if length(report.payload) < HEADER_SIZE
                 @warn "Payload too small for REPE message" size=length(report.payload)
                 continue
             end
@@ -334,7 +169,7 @@ end
 Stop the server loop. The server will finish processing the current message
 and then exit the serve loop.
 """
-function REPE.stop(server::UniUDPServer)
+function stop(server::UniUDPServer)
     server.running[] = false
 end
 
@@ -344,7 +179,7 @@ end
 Start the UniUDP server, processing incoming messages until stopped.
 This is an alias for `serve()` to match the TCP server API.
 """
-function REPE.listen(server::UniUDPServer; async::Bool=false)
+function listen(server::UniUDPServer; async::Bool=false)
     serve(server; async=async)
 end
 
@@ -354,7 +189,7 @@ end
 Stop the server and close its UDP socket.
 """
 function Base.close(server::UniUDPServer)
-    REPE.stop(server)
+    stop(server)
     close(server.socket)
 end
 
@@ -368,23 +203,9 @@ function Base.isopen(server::UniUDPServer)
 end
 
 # Pretty printing
-function Base.show(io::IO, client::UniUDPClient)
-    status = isopen(client.socket) ? "open" : "closed"
-    print(io, "UniUDPClient($(client.target_host):$(client.target_port), ",
-          "redundancy=$(client.redundancy), fec=$(client.fec_group_size), $status)")
-end
-
 function Base.show(io::IO, server::UniUDPServer)
     status = server.running[] ? "running" : "stopped"
     n_handlers = length(server.handlers)
     handler_text = n_handlers == 1 ? "1 handler" : "$n_handlers handlers"
     print(io, "UniUDPServer($status, $handler_text)")
 end
-
-# Populate REPE module with actual types when extension loads
-function __init__()
-    REPE.eval(:(global UniUDPClient = $UniUDPClient))
-    REPE.eval(:(global UniUDPServer = $UniUDPServer))
-end
-
-end # module

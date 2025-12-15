@@ -1,16 +1,12 @@
 name = "REPE"
 uuid = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 authors = ["Stephen Berry"]
-version = "0.6.0"
+version = "0.7.0"
 
 [deps]
 BEVE = "e4b2c2d1-1234-5678-9abc-123456789abc"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
-UniUDP = "c83ef1eb-e2da-4a6a-aae7-6462aebcc632"
-
-[extensions]
-UniUDPExt = "UniUDP"
 
 [compat]
 BEVE = "1.5.1"
@@ -19,7 +15,6 @@ julia = "1.9"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-UniUDP = "c83ef1eb-e2da-4a6a-aae7-6462aebcc632"
 
 [targets]
-test = ["Test", "UniUDP"]
+test = ["Test"]

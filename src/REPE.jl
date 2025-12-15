@@ -19,11 +19,12 @@ export serialize_message, deserialize_message
 export parse_query, parse_body, encode_body
 export set_nodelay!
 # Registry exports
-export Registry, serve, register!
+export Registry, serve, register, register!
 export parse_json_pointer, resolve_json_pointer, set_json_pointer!
-# UniUDP exports
+# Constants exports
 export HEADER_SIZE, QUERY_JSON_POINTER, BODY_JSON, BODY_BEVE, BODY_UTF8
-export UniUDPClient, UniUDPServer
+# UniUDP exports
+export UniUDP, UniUDPClient, UniUDPServer
 
 include("constants.jl")
 include("header.jl")
@@ -33,8 +34,11 @@ include("server.jl")
 include("registry.jl")
 include("errors.jl")
 
-# Placeholders for UniUDP extension types - populated by UniUDPExt when loaded
-global UniUDPClient = nothing
-global UniUDPServer = nothing
+# UniUDP submodule - unidirectional UDP protocol with chunking, redundancy, and FEC
+include("uniudp.jl")
+
+# UniUDP client and server for REPE over unidirectional UDP
+include("uniudp_client.jl")
+include("uniudp_server.jl")
 
 end
