@@ -31,7 +31,13 @@ jobs:
         uses: julia-actions/cache@v2
 
       - name: Install dependencies
-        uses: julia-actions/julia-buildpkg@v1
+        run: |
+          julia --project=. -e '
+            using Pkg
+            Pkg.add(url="https://github.com/beve-org/BEVE.jl")
+            Pkg.instantiate()
+            Pkg.build()
+          '
 
       - name: Run tests
         uses: julia-actions/julia-runtest@v1
