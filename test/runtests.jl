@@ -10,4 +10,6 @@ using Sockets
     include("test_concurrent_simple.jl")
     include("test_client_server.jl")
     include("test_concurrent.jl")
+    include("test_uniudp.jl")
+    include("test_uniudp_integration.jl")
 end

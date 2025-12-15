@@ -11,8 +11,9 @@ Julia implementation of the [REPE (Remote Efficient Protocol Extension)](https:/
 - Error handling with standardized error codes
 - Notification support (fire-and-forget messages)
 - **Registry support** for serving dictionaries with JSON Pointer syntax (Glaze-compatible)
+- **UniUDP support** for REPE over unidirectional UDP with redundancy and FEC
 - Compatible with C++ Glaze implementation
-- Comprehensive test suite with 230+ unit tests
+- Comprehensive test suite with 460+ unit tests
 - Integration tested with Glaze C++ servers
 
 ## Requirements
@@ -504,6 +505,50 @@ println("JSON: $json_size bytes")
 
 See `examples/beve_demo.jl` for comprehensive BEVE examples and performance comparisons.
 
+## UniUDP - Unidirectional UDP Support
+
+REPE.jl includes built-in support for sending REPE messages over unidirectional UDP links with configurable redundancy and forward error correction (FEC). This is useful for:
+
+- One-way satellite or radio links
+- Sensor networks with asymmetric connectivity
+- Broadcast/multicast scenarios
+- High-throughput logging where acknowledgments aren't needed
+
+### UniUDP Client
+
+```julia
+using REPE
+
+client = UniUDPClient(ip"192.168.1.100", 5000;
+    redundancy = 2,       # Send each chunk twice
+    chunk_size = 1024,    # Bytes per chunk
+    fec_group_size = 4    # XOR parity every 4 chunks
+)
+
+# Fire-and-forget notification
+send_notify(client, "/sensor/temperature", Dict("value" => 23.5))
+
+close(client)
+```
+
+### UniUDP Server
+
+```julia
+using REPE
+
+server = UniUDPServer(5000;
+    response_callback = (method, result, msg) -> println("Result: $result")
+)
+
+register(server, "/compute/square") do params, msg
+    return params["x"]^2
+end
+
+listen(server)
+```
+
+For complete documentation including the packet format, FEC configuration, and raw protocol access, see [docs/UniUDP.md](docs/UniUDP.md).
+
 ## Testing
 
 ### Run Julia Unit Tests
@@ -512,7 +557,7 @@ See `examples/beve_demo.jl` for comprehensive BEVE examples and performance comp
 julia --project=. -e 'using Pkg; Pkg.test()'
 ```
 
-All 230+ unit tests should pass, covering:
+All 460+ unit tests should pass, covering:
 - Header serialization/deserialization
 - Message encoding/decoding (JSON, UTF8, BEVE, binary)
 - Client-server communication
@@ -520,6 +565,8 @@ All 230+ unit tests should pass, covering:
 - Error handling
 - BEVE binary format support
 - Registry with JSON Pointer resolution
+- UniUDP protocol (chunking, redundancy, FEC)
+- UniUDP REPE integration
 
 ### Run C++ Integration Tests
 

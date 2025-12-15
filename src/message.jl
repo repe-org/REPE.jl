@@ -129,6 +129,9 @@ function parse_body(msg::Message)
 end
 
 function parse_body(msg::Message, ::Type{T}) where T
+    if isempty(msg.body)
+        return nothing
+    end
     format = msg.header.body_format
     if format == UInt16(BODY_JSON)
         return JSONLib.parse(msg.body, T)
