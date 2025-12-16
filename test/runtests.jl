@@ -12,4 +12,6 @@ using Sockets
     include("test_concurrent.jl")
     include("test_uniudp.jl")
     include("test_uniudp_integration.jl")
+    include("test_fleet.jl")
+    include("test_uniudp_fleet.jl")
 end

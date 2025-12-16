@@ -12,8 +12,9 @@ Julia implementation of the [REPE (Remote Efficient Protocol Extension)](https:/
 - Notification support (fire-and-forget messages)
 - **Registry support** for serving dictionaries with JSON Pointer syntax (Glaze-compatible)
 - **UniUDP support** for REPE over unidirectional UDP with redundancy and FEC
+- **Fleet API** for multi-server control with TCP and UniUDP support
 - Compatible with C++ Glaze implementation
-- Comprehensive test suite with 460+ unit tests
+- Comprehensive test suite with 650+ unit tests
 - Integration tested with Glaze C++ servers
 
 ## Requirements
@@ -549,6 +550,66 @@ listen(server)
 
 For complete documentation including the packet format, FEC configuration, and raw protocol access, see [docs/UniUDP.md](docs/UniUDP.md).
 
+## Fleet API - Multi-Server Control
+
+REPE.jl includes a Fleet API for managing and communicating with multiple servers through a unified interface. This supports both TCP (`Fleet`) for bidirectional communication and UDP (`UniUDPFleet`) for fire-and-forget broadcasting.
+
+### TCP Fleet
+
+```julia
+using REPE
+
+# Define fleet configuration
+config = [
+    NodeConfig("compute-1.local", 8080; tags=["compute"]),
+    NodeConfig("compute-2.local", 8080; tags=["compute"]),
+    NodeConfig("storage.local", 8080; tags=["storage"]),
+]
+
+fleet = Fleet(config)
+connect!(fleet)
+
+# Broadcast to all compute nodes
+results = broadcast(fleet, "/compute", Dict("value" => 42); tags=["compute"])
+
+for (name, result) in results
+    if succeeded(result)
+        println("$name: $(result.value)")
+    end
+end
+
+# Aggregate results with map_reduce
+total = map_reduce(fleet, "/compute", Dict("value" => 10); tags=["compute"]) do results
+    sum(r.value["result"] for r in results if succeeded(r))
+end
+
+disconnect!(fleet)
+```
+
+### UniUDP Fleet
+
+```julia
+using REPE
+
+# Define UniUDP fleet for sensor network
+config = [
+    UniUDPNodeConfig("gateway-1.local", 5000; tags=["primary"]),
+    UniUDPNodeConfig("gateway-2.local", 5000; tags=["backup"]),
+]
+
+fleet = UniUDPFleet(config)
+
+# Fire-and-forget broadcast to all nodes
+results = send_notify(fleet, "/sensor/reading", Dict("value" => 23.5))
+
+# Filter by tag
+results = send_notify(fleet, "/alert", Dict("level" => "warning"); tags=["primary"])
+
+close(fleet)
+```
+
+For complete documentation including tag-based filtering, health monitoring, dynamic node management, and mixed fleet patterns, see [docs/Fleet.md](docs/Fleet.md).
+
 ## Testing
 
 ### Run Julia Unit Tests
@@ -557,7 +618,7 @@ For complete documentation including the packet format, FEC configuration, and r
 julia --project=. -e 'using Pkg; Pkg.test()'
 ```
 
-All 460+ unit tests should pass, covering:
+All 650+ unit tests should pass, covering:
 - Header serialization/deserialization
 - Message encoding/decoding (JSON, UTF8, BEVE, binary)
 - Client-server communication
@@ -567,6 +628,7 @@ All 460+ unit tests should pass, covering:
 - Registry with JSON Pointer resolution
 - UniUDP protocol (chunking, redundancy, FEC)
 - UniUDP REPE integration
+- Fleet API (TCP and UniUDP multi-server control)
 
 ### Run C++ Integration Tests
 
