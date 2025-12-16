@@ -25,6 +25,16 @@ export parse_json_pointer, resolve_json_pointer, set_json_pointer!
 export HEADER_SIZE, QUERY_JSON_POINTER, BODY_JSON, BODY_BEVE, BODY_UTF8
 # UniUDP exports
 export UniUDP, UniUDPClient, UniUDPServer
+# Fleet exports (TCP)
+export NodeConfig, Node, Fleet, RemoteResult, HealthStatus
+export connect!, disconnect!, reconnect!
+export nodes, connected_nodes, filter_nodes
+export add_node!, remove_node!
+export call, map_reduce, health_check
+export succeeded, failed
+# UniUDP Fleet exports
+export UniUDPNodeConfig, UniUDPNode, UniUDPFleet, SendResult
+export notify_all
 
 include("constants.jl")
 include("header.jl")
@@ -40,5 +50,9 @@ include("uniudp.jl")
 # UniUDP client and server for REPE over unidirectional UDP
 include("uniudp_client.jl")
 include("uniudp_server.jl")
+
+# Fleet API - multi-server control
+include("fleet.jl")
+include("uniudp_fleet.jl")
 
 end
